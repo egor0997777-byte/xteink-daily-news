@@ -19,10 +19,15 @@ from xml.etree import ElementTree as ET
 
 # --- Config ---
 RSS_FEEDS = [
-    ("РИА Новости", "https://ria.ru/export/rss2/index.xml"),
-    ("Lenta.ru", "https://lenta.ru/rss"),
-    ("Интерфакс", "https://www.interfax.ru/rss"),
-    ("РБК", "https://rssexport.rbc.ru/rbcnews/news/30/full.rss"),
+    ("Хабр (новости)", "https://habr.com/ru/rss/news/"),
+    ("Хабр (статьи)", "https://habr.com/ru/rss/articles/"),
+    ("Хабр (разработка)", "https://habr.com/ru/rss/flows/develop/"),
+    ("Лайфхакер", "https://lifehacker.ru/feed/"),
+    ("VC.ru", "https://vc.ru/rss"),
+    ("iXBT", "https://www.ixbt.com/export/rss.xml"),
+    ("3DNews", "https://3dnews.ru/news/rss/"),
+    ("Tproger", "https://tproger.ru/feed/"),
+    ("DTF", "https://dtf.ru/rss/all"),
 ]
 
 MAX_ITEMS = 80
@@ -46,13 +51,9 @@ def strip_html(text: str) -> str:
     if not text:
         return ""
     text = html.unescape(text)
-    # Remove script/style
     text = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", text, flags=re.I | re.S)
-    # Replace common block tags with newlines
     text = re.sub(r"</?(p|div|br|h[1-6]|li|tr)[^>]*>", "\n", text, flags=re.I)
-    # Strip remaining tags
     text = re.sub(r"<[^>]+>", "", text)
-    # Normalize whitespace
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
@@ -84,7 +85,6 @@ def get_text(item: ET.Element, *tags: str) -> str:
         el = item.find(tag)
         if el is not None and el.text:
             return el.text.strip()
-        # namespaced
         for child in item:
             if child.tag.endswith("}" + tag) or child.tag == tag:
                 if child.text:
@@ -96,7 +96,6 @@ def get_link(item: ET.Element) -> str:
     link = get_text(item, "link")
     if link:
         return link
-    # atom-style
     for el in item.findall("link") + item.findall("{http://www.w3.org/2005/Atom}link"):
         href = el.get("href")
         if href:
@@ -115,7 +114,6 @@ def fetch_feed(name: str, url: str) -> list[dict]:
         print(f"[WARN] Failed {name}: {e}")
         return items
 
-    # Find channel/items (RSS 2.0) or feed/entry (Atom)
     channel = root.find("channel")
     if channel is not None:
         entries = channel.findall("item")
@@ -147,7 +145,6 @@ def collect_news() -> list[dict]:
     for name, url in RSS_FEEDS:
         all_items.extend(fetch_feed(name, url))
 
-    # Dedup by URL then by normalized title
     seen_urls: set[str] = set()
     seen_titles: set[str] = set()
     unique: list[dict] = []
@@ -160,16 +157,14 @@ def collect_news() -> list[dict]:
         seen_titles.add(nt)
         unique.append(it)
 
-    # Filter by age
     cutoff = datetime.now(timezone.utc) - timedelta(hours=MAX_AGE_HOURS)
     fresh = []
     for it in unique:
         if it["pub"] is None:
-            fresh.append(it)  # keep unknown date
+            fresh.append(it)
         elif it["pub"] >= cutoff:
             fresh.append(it)
 
-    # Sort newest first
     fresh.sort(key=lambda x: x["pub"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     return fresh[:MAX_ITEMS]
 
@@ -237,11 +232,10 @@ def make_xhtml(items: list[dict], title: str) -> str:
 def build_epub(items: list[dict], path: Path) -> None:
     book_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    title = f"Новости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
+    title = f"Техновости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
 
     content_xhtml = make_xhtml(items, title)
 
-    # OPF
     opf = f"""<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
@@ -262,7 +256,6 @@ def build_epub(items: list[dict], path: Path) -> None:
 </package>
 """
 
-    # NCX
     ncx_nav = []
     for i, it in enumerate(items, 1):
         ncx_nav.append(
@@ -294,9 +287,7 @@ def build_epub(items: list[dict], path: Path) -> None:
 </container>
 """
 
-    # Write ZIP with correct order and compression
     with zipfile.ZipFile(path, "w") as zf:
-        # mimetype must be first and uncompressed
         zf.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
         zf.writestr("META-INF/container.xml", container, compress_type=zipfile.ZIP_DEFLATED)
         zf.writestr("OEBPS/content.opf", opf, compress_type=zipfile.ZIP_DEFLATED)
@@ -306,11 +297,10 @@ def build_epub(items: list[dict], path: Path) -> None:
 
 def build_opds(items: list[dict], path: Path) -> None:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    title = f"Новости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
+    title = f"Техновости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
     epub_url = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}/{EPUB_NAME}"
     opds_url = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}/{OPDS_NAME}"
 
-    # Minimal OPDS Atom catalog with acquisition link expected by CrossPoint
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:opds="http://opds-spec.org/2010/catalog">
@@ -328,7 +318,7 @@ def build_opds(items: list[dict], path: Path) -> None:
     <title>{escape_xml(title)}</title>
     <updated>{now}</updated>
     <author><name>Xteink Daily News</name></author>
-    <summary>{len(items)} свежих материалов из российских СМИ. Без изображений, удобно для e-ink.</summary>
+    <summary>{len(items)} свежих технических материалов. Только текст, без изображений.</summary>
     <link rel="http://opds-spec.org/acquisition"
           href="{epub_url}"
           type="application/epub+zip"/>
