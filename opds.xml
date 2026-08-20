@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"
-      xmlns:opds="http://opds-spec.org/2010/catalog">
-  <id>urn:xteink:daily-news</id>
-  <title>Xteink Tech News</title>
-  <updated>2026-08-20T20:25:50Z</updated>
-  <author><name>Xteink Daily News</name></author>
-  <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  <entry>
-    <id>urn:xteink:latest</id>
-    <title>Техновости · 20.08.2026</title>
-    <updated>2026-08-20T20:25:50Z</updated>
-    <content type="text">250 материалов. Главы = источники. Только текст.</content>
-    <link rel="http://opds-spec.org/acquisition"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-20.epub"
-          type="application/epub+zip"/>
-  </entry>
-</feed>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
+<id>urn:xteink:daily-news</id><title>Xteink Tech News</title><updated>2026-08-20T20:43:09Z</updated>
+<author><name>Xteink Daily News</name></author>
+<link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<entry>
+<id>urn:xteink:latest</id><title>Техновости · 20.08.2026</title><updated>2026-08-20T20:43:09Z</updated>
+<content type="text">176 статей. Оглавление: источник → статья. Полный текст где возможно.</content>
+<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-20.epub" type="application/epub+zip"/>
+</entry></feed>
