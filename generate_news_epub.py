@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Minimal RSS → EPUB + OPDS generator for Xteink X3 / CrossPoint.
-Uses only Python standard library.
+"""Minimal RSS → EPUB + hierarchical OPDS for Xteink X3 / CrossPoint.
+Only standard library. Text-only EPUBs, no images.
 """
 
 from __future__ import annotations
 
 import html
 import re
-import time
 import uuid
 import zipfile
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -18,27 +18,28 @@ from urllib.request import Request, urlopen
 from xml.etree import ElementTree as ET
 
 # --- Config ---
+# (display name, slug for files, rss url)
 RSS_FEEDS = [
-    ("Хабр (новости)", "https://habr.com/ru/rss/news/"),
-    ("Хабр (статьи)", "https://habr.com/ru/rss/articles/"),
-    ("Хабр (разработка)", "https://habr.com/ru/rss/flows/develop/"),
-    ("Лайфхакер", "https://lifehacker.ru/feed/"),
-    ("VC.ru", "https://vc.ru/rss"),
-    ("iXBT", "https://www.ixbt.com/export/rss.xml"),
-    ("3DNews", "https://3dnews.ru/news/rss/"),
-    ("Tproger", "https://tproger.ru/feed/"),
-    ("DTF", "https://dtf.ru/rss/all"),
+    ("Хабр (новости)", "habr-news", "https://habr.com/ru/rss/news/"),
+    ("Хабр (статьи)", "habr-articles", "https://habr.com/ru/rss/articles/"),
+    ("Хабр (разработка)", "habr-dev", "https://habr.com/ru/rss/flows/develop/"),
+    ("Лайфхакер", "lifehacker", "https://lifehacker.ru/feed/"),
+    ("VC.ru", "vc", "https://vc.ru/rss"),
+    ("iXBT", "ixbt", "https://www.ixbt.com/export/rss.xml"),
+    ("3DNews", "3dnews", "https://3dnews.ru/news/rss/"),
+    ("Tproger", "tproger", "https://tproger.ru/feed/"),
+    ("DTF", "dtf", "https://dtf.ru/rss/all"),
 ]
 
-MAX_ITEMS = 80
+MAX_ITEMS_TOTAL = 80
+MAX_ITEMS_PER_SOURCE = 40
 MAX_AGE_HOURS = 36
 USER_AGENT = "XteinkNewsBot/1.0 (+https://github.com/egor0997777-byte/xteink-daily-news)"
 REPO_OWNER = "egor0997777-byte"
 REPO_NAME = "xteink-daily-news"
 BRANCH = "main"
 OUTPUT_DIR = Path(".")
-EPUB_NAME = "latest.epub"
-OPDS_NAME = "opds.xml"
+BASE_RAW = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}"
 
 
 def fetch_url(url: str, timeout: int = 25) -> bytes:
@@ -123,7 +124,9 @@ def fetch_feed(name: str, url: str) -> list[dict]:
     for entry in entries:
         title = get_text(entry, "title")
         link = get_link(entry)
-        description = get_text(entry, "description", "summary", "{http://purl.org/rss/1.0/modules/content/}encoded")
+        description = get_text(
+            entry, "description", "summary", "{http://purl.org/rss/1.0/modules/content/}encoded"
+        )
         pub = parse_pubdate(entry)
         if not title or not link:
             continue
@@ -140,15 +143,11 @@ def fetch_feed(name: str, url: str) -> list[dict]:
     return items
 
 
-def collect_news() -> list[dict]:
-    all_items: list[dict] = []
-    for name, url in RSS_FEEDS:
-        all_items.extend(fetch_feed(name, url))
-
+def dedup_and_filter(items: list[dict], limit: int) -> list[dict]:
     seen_urls: set[str] = set()
     seen_titles: set[str] = set()
     unique: list[dict] = []
-    for it in all_items:
+    for it in items:
         url = it["link"].split("?")[0].rstrip("/")
         nt = normalize_title(it["title"])
         if url in seen_urls or nt in seen_titles:
@@ -160,13 +159,13 @@ def collect_news() -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=MAX_AGE_HOURS)
     fresh = []
     for it in unique:
-        if it["pub"] is None:
-            fresh.append(it)
-        elif it["pub"] >= cutoff:
+        if it["pub"] is None or it["pub"] >= cutoff:
             fresh.append(it)
 
-    fresh.sort(key=lambda x: x["pub"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    return fresh[:MAX_ITEMS]
+    fresh.sort(
+        key=lambda x: x["pub"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True
+    )
+    return fresh[:limit]
 
 
 def escape_xml(s: str) -> str:
@@ -182,15 +181,17 @@ def escape_xml(s: str) -> str:
 def make_xhtml(items: list[dict], title: str) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     body_parts = [
-        f'<h1>{escape_xml(title)}</h1>',
+        f"<h1>{escape_xml(title)}</h1>",
         f'<p class="meta">Обновлено: {now} · {len(items)} материалов</p>',
-        '<hr/>',
+        "<hr/>",
     ]
     for i, it in enumerate(items, 1):
         pub_str = ""
         if it["pub"]:
             try:
-                pub_str = it["pub"].astimezone(timezone(timedelta(hours=3))).strftime("%d.%m %H:%M")
+                pub_str = it["pub"].astimezone(timezone(timedelta(hours=3))).strftime(
+                    "%d.%m %H:%M"
+                )
             except Exception:
                 pub_str = str(it["pub"])[:16]
         src = escape_xml(it["source"])
@@ -199,11 +200,11 @@ def make_xhtml(items: list[dict], title: str) -> str:
         link = escape_xml(it["link"])
         body_parts.append(
             f'<article id="n{i}">'
-            f'<h2>{t}</h2>'
+            f"<h2>{t}</h2>"
             f'<p class="meta">{src} · {pub_str}</p>'
-            f'<p>{desc}</p>'
+            f"<p>{desc}</p>"
             f'<p class="link"><a href="{link}">Источник</a></p>'
-            f'</article><hr/>'
+            f"</article><hr/>"
         )
     body = "\n".join(body_parts)
     return f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -229,22 +230,19 @@ def make_xhtml(items: list[dict], title: str) -> str:
 """
 
 
-def build_epub(items: list[dict], path: Path) -> None:
+def build_epub(items: list[dict], path: Path, book_title: str) -> None:
     book_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    title = f"Техновости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
-
-    content_xhtml = make_xhtml(items, title)
+    content_xhtml = make_xhtml(items, book_title)
 
     opf = f"""<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
     <dc:identifier id="BookId">urn:uuid:{book_id}</dc:identifier>
-    <dc:title>{escape_xml(title)}</dc:title>
+    <dc:title>{escape_xml(book_title)}</dc:title>
     <dc:language>ru</dc:language>
     <dc:creator>Xteink Daily News</dc:creator>
     <dc:date>{now}</dc:date>
-    <meta name="cover" content=""/>
   </metadata>
   <manifest>
     <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
@@ -262,7 +260,7 @@ def build_epub(items: list[dict], path: Path) -> None:
             f'    <navPoint id="np{i}" playOrder="{i}">\n'
             f'      <navLabel><text>{escape_xml(it["title"][:80])}</text></navLabel>\n'
             f'      <content src="content.xhtml#n{i}"/>\n'
-            f'    </navPoint>'
+            f"    </navPoint>"
         )
     ncx = f"""<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
@@ -272,7 +270,7 @@ def build_epub(items: list[dict], path: Path) -> None:
     <meta name="dtb:totalPageCount" content="0"/>
     <meta name="dtb:maxPageNumber" content="0"/>
   </head>
-  <docTitle><text>{escape_xml(title)}</text></docTitle>
+  <docTitle><text>{escape_xml(book_title)}</text></docTitle>
   <navMap>
 {chr(10).join(ncx_nav)}
   </navMap>
@@ -295,37 +293,24 @@ def build_epub(items: list[dict], path: Path) -> None:
         zf.writestr("OEBPS/content.xhtml", content_xhtml, compress_type=zipfile.ZIP_DEFLATED)
 
 
-def build_opds(items: list[dict], path: Path) -> None:
+def write_opds_catalog(
+    path: Path,
+    feed_id: str,
+    feed_title: str,
+    entries_xml: str,
+) -> None:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    title = f"Техновости · {datetime.now(timezone(timedelta(hours=3))).strftime('%d.%m.%Y')}"
-    epub_url = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}/{EPUB_NAME}"
-    opds_url = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}/{OPDS_NAME}"
-
+    self_url = f"{BASE_RAW}/{path.name}"
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:opds="http://opds-spec.org/2010/catalog">
-  <id>urn:xteink:daily-news</id>
-  <title>Xteink Daily News</title>
+  <id>{feed_id}</id>
+  <title>{escape_xml(feed_title)}</title>
   <updated>{now}</updated>
-  <author>
-    <name>Xteink Daily News</name>
-  </author>
-  <link rel="self" href="{opds_url}" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  <link rel="start" href="{opds_url}" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-
-  <entry>
-    <id>urn:xteink:latest-epub</id>
-    <title>{escape_xml(title)}</title>
-    <updated>{now}</updated>
-    <author><name>Xteink Daily News</name></author>
-    <summary>{len(items)} свежих технических материалов. Только текст, без изображений.</summary>
-    <link rel="http://opds-spec.org/acquisition"
-          href="{epub_url}"
-          type="application/epub+zip"/>
-    <link rel="alternate"
-          href="{epub_url}"
-          type="application/epub+zip"/>
-  </entry>
+  <author><name>Xteink Daily News</name></author>
+  <link rel="self" href="{self_url}" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <link rel="start" href="{BASE_RAW}/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+{entries_xml}
 </feed>
 """
     path.write_text(xml, encoding="utf-8")
@@ -333,20 +318,84 @@ def build_opds(items: list[dict], path: Path) -> None:
 
 def main() -> None:
     print("Collecting news...")
-    items = collect_news()
-    print(f"Total after dedup/filter: {len(items)}")
+    by_source: dict[str, list[dict]] = {}
+    slug_of: dict[str, str] = {}
+    all_raw: list[dict] = []
 
-    epub_path = OUTPUT_DIR / EPUB_NAME
-    opds_path = OUTPUT_DIR / OPDS_NAME
+    for name, slug, url in RSS_FEEDS:
+        items = fetch_feed(name, url)
+        filtered = dedup_and_filter(items, MAX_ITEMS_PER_SOURCE)
+        if filtered:
+            by_source[name] = filtered
+            slug_of[name] = slug
+            all_raw.extend(filtered)
 
-    print(f"Building {epub_path}...")
-    build_epub(items, epub_path)
-    print(f"Building {opds_path}...")
-    build_opds(items, opds_path)
+    all_items = dedup_and_filter(all_raw, MAX_ITEMS_TOTAL)
+    print(f"Total after dedup/filter: {len(all_items)}")
+
+    date_str = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y")
+    print("Building latest.epub...")
+    build_epub(all_items, OUTPUT_DIR / "latest.epub", f"Техновости · {date_str}")
+
+    source_files: list[tuple[str, str, int]] = []
+    for name, items in by_source.items():
+        slug = slug_of[name]
+        epub_name = f"{slug}.epub"
+        print(f"Building {epub_name}...")
+        build_epub(items, OUTPUT_DIR / epub_name, f"{name} · {date_str}")
+        source_files.append((name, slug, len(items)))
+
+    root_entries = []
+    root_entries.append(
+        f"""  <entry>
+    <id>urn:xteink:all</id>
+    <title>Все новости</title>
+    <updated>{datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}</updated>
+    <content type="text">{len(all_items)} материалов из всех источников</content>
+    <link rel="http://opds-spec.org/acquisition"
+          href="{BASE_RAW}/latest.epub"
+          type="application/epub+zip"/>
+  </entry>"""
+    )
+    for name, slug, count in source_files:
+        root_entries.append(
+            f"""  <entry>
+    <id>urn:xteink:cat:{slug}</id>
+    <title>{escape_xml(name)}</title>
+    <updated>{datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}</updated>
+    <content type="text">{count} материалов</content>
+    <link rel="subsection"
+          href="{BASE_RAW}/opds-{slug}.xml"
+          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+  </entry>"""
+        )
+    write_opds_catalog(
+        OUTPUT_DIR / "opds.xml",
+        "urn:xteink:daily-news",
+        "Xteink Tech News",
+        "\n".join(root_entries),
+    )
+
+    for name, slug, count in source_files:
+        entries = f"""  <entry>
+    <id>urn:xteink:book:{slug}</id>
+    <title>{escape_xml(name)} · {date_str}</title>
+    <updated>{datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}</updated>
+    <content type="text">{count} материалов. Только текст.</content>
+    <link rel="http://opds-spec.org/acquisition"
+          href="{BASE_RAW}/{slug}.epub"
+          type="application/epub+zip"/>
+  </entry>"""
+        write_opds_catalog(
+            OUTPUT_DIR / f"opds-{slug}.xml",
+            f"urn:xteink:cat:{slug}",
+            name,
+            entries,
+        )
 
     print("Done.")
-    print(f"  EPUB size: {epub_path.stat().st_size} bytes")
-    print(f"  OPDS size: {opds_path.stat().st_size} bytes")
+    print(f"  latest.epub + {len(source_files)} source EPUBs")
+    print(f"  opds.xml + {len(source_files)} subcatalogs")
 
 
 if __name__ == "__main__":
