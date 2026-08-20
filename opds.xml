@@ -3,7 +3,7 @@
       xmlns:opds="http://opds-spec.org/2010/catalog">
   <id>urn:xteink:daily-news</id>
   <title>Xteink Daily News</title>
-  <updated>2026-08-20T19:48:47Z</updated>
+  <updated>2026-08-20T20:01:56Z</updated>
   <author>
     <name>Xteink Daily News</name>
   </author>
@@ -12,10 +12,10 @@
 
   <entry>
     <id>urn:xteink:latest-epub</id>
-    <title>Новости · 20.08.2026</title>
-    <updated>2026-08-20T19:48:47Z</updated>
+    <title>Техновости · 20.08.2026</title>
+    <updated>2026-08-20T20:01:56Z</updated>
     <author><name>Xteink Daily News</name></author>
-    <summary>80 свежих материалов из российских СМИ. Без изображений, удобно для e-ink.</summary>
+    <summary>80 свежих технических материалов. Только текст, без изображений.</summary>
     <link rel="http://opds-spec.org/acquisition"
           href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/latest.epub"
           type="application/epub+zip"/>
