@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opds="http://opds-spec.org/2010/catalog">
+  <id>urn:xteink:cat:dtf</id>
+  <title>DTF</title>
+  <updated>2026-08-20T20:14:01Z</updated>
+  <author><name>Xteink Daily News</name></author>
+  <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-dtf.xml" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <entry>
+    <id>urn:xteink:book:dtf</id>
+    <title>DTF · 20.08.2026</title>
+    <updated>2026-08-20T20:14:01Z</updated>
+    <content type="text">12 материалов. Только текст.</content>
+    <link rel="http://opds-spec.org/acquisition"
+          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/dtf.epub"
+          type="application/epub+zip"/>
+  </entry>
+</feed>
