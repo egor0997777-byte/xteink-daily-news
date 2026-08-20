@@ -3,89 +3,17 @@
       xmlns:opds="http://opds-spec.org/2010/catalog">
   <id>urn:xteink:daily-news</id>
   <title>Xteink Tech News</title>
-  <updated>2026-08-20T20:14:01Z</updated>
+  <updated>2026-08-20T20:25:50Z</updated>
   <author><name>Xteink Daily News</name></author>
-  <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
-  <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+  <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
   <entry>
-    <id>urn:xteink:all</id>
-    <title>Все новости</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">80 материалов из всех источников</content>
+    <id>urn:xteink:latest</id>
+    <title>Техновости · 20.08.2026</title>
+    <updated>2026-08-20T20:25:50Z</updated>
+    <content type="text">250 материалов. Главы = источники. Только текст.</content>
     <link rel="http://opds-spec.org/acquisition"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/latest.epub"
+          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-20.epub"
           type="application/epub+zip"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:habr-news</id>
-    <title>Хабр (новости)</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">40 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-habr-news.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:habr-articles</id>
-    <title>Хабр (статьи)</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">40 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-habr-articles.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:habr-dev</id>
-    <title>Хабр (разработка)</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">40 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-habr-dev.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:vc</id>
-    <title>VC.ru</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">12 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-vc.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:ixbt</id>
-    <title>iXBT</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">40 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-ixbt.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:3dnews</id>
-    <title>3DNews</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">40 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-3dnews.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:tproger</id>
-    <title>Tproger</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">2 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-tproger.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  </entry>
-  <entry>
-    <id>urn:xteink:cat:dtf</id>
-    <title>DTF</title>
-    <updated>2026-08-20T20:14:01Z</updated>
-    <content type="text">12 материалов</content>
-    <link rel="subsection"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-dtf.xml"
-          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
   </entry>
 </feed>
