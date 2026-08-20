@@ -2,7 +2,6 @@ name: Daily News EPUB
 
 on:
   schedule:
-    # 07:00 Moscow = 04:00 UTC
     - cron: "0 4 * * *"
   workflow_dispatch:
 
@@ -28,7 +27,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.epub opds*.xml
+          git rm -f --ignore-unmatch habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub opds-*.xml 2>/dev/null || true
+          git add *.epub opds.xml generate_news_epub.py
           if git diff --staged --quiet; then
             echo "No changes"
           else
