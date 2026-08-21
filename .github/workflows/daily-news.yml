@@ -27,8 +27,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git rm -f --ignore-unmatch habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub opds-*.xml 2>/dev/null || true
-          git add *.epub opds.xml generate_news_epub.py
+          # remove old multi-epub leftovers and packing artifacts
+          git rm -f --ignore-unmatch \
+            habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub \
+            opds-*.xml _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
+            generate_news_epub_min.py _p1.txt _p2.txt 2>/dev/null || true
+          git add *.epub opds.xml generate_news_epub.py README.md
           if git diff --staged --quiet; then
             echo "No changes"
           else
