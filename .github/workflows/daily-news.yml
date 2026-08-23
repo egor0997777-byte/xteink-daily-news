@@ -1,9 +1,6 @@
 name: Daily News EPUB
 
 on:
-  push:
-    branches:
-      - chatgpt-fulltext-fix
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
