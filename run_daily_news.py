@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Safe runner for Xteink Daily News.
 
-Patches full-text extraction without rewriting the large generator:
-- fixes nested skipped HTML blocks with a tag stack;
+Adds robust full-text extraction without rewriting the large generator:
+- parses nested article/content containers structurally (not regex closing tags);
+- skips junk blocks with balanced nesting;
 - attempts to fetch the article page for every item;
-- uses RSS text only as a fallback;
+- uses RSS text only as a fallback when the source page cannot be extracted;
 - validates generated EPUB before success.
 """
 from __future__ import annotations
@@ -20,16 +21,122 @@ from xml.etree import ElementTree as ET
 import generate_news_epub as g
 
 
-class SafeArticleExtractor(HTMLParser):
-    SKIP = g.ArticleExtractor.SKIP
-    JUNK_CLASS_HINTS = (
-        "tm-meta", "tm-article-meta", "tm-votes", "tm-user", "user-info",
-        "tm-separated-list", "tm-tags", "tm-hubs", "tm-publication-stats",
-        "tm-article-snippet", "tm-data-icons", "tm-icon", "tm-button",
-        "share", "social", "comment", "breadcrumb", "sidebar", "related",
-        "advert", "banner", "cookie", "meta-bar", "post-meta", "byline",
-        "author-info", "reading-time", "views-count",
-    )
+JUNK_CLASS_HINTS = (
+    "tm-meta", "tm-article-meta", "tm-votes", "tm-user", "user-info",
+    "tm-separated-list", "tm-tags", "tm-hubs", "tm-publication-stats",
+    "tm-article-snippet", "tm-data-icons", "tm-icon", "tm-button",
+    "share", "social", "comment", "breadcrumb", "sidebar", "related",
+    "advert", "banner", "cookie", "meta-bar", "post-meta", "byline",
+    "author-info", "reading-time", "views-count",
+)
+TARGET_CLASS_HINTS = (
+    "article-formatted-body", "tm-article-body", "article-body", "post-content",
+    "entry-content", "content-body", "article__text", "article-content",
+    "post__text", "post-text", "news-detail", "news__text",
+)
+BLOCK_TAGS = {"p", "br", "h1", "h2", "h3", "h4", "li", "blockquote", "div", "section"}
+VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+
+
+class MainContentExtractor(HTMLParser):
+    """Capture a complete article/content container with balanced nesting."""
+
+    def __init__(self):
+        super().__init__()
+        self.parts: list[str] = []
+        self.stack: list[tuple[str, bool]] = []
+        self.capture_depth = 0
+        self.skip_count = 0
+        self.found_target = False
+
+    @staticmethod
+    def _attrs(attrs):
+        return {str(k).lower(): (v or "") for k, v in attrs}
+
+    def _is_target(self, tag: str, attrs) -> bool:
+        a = self._attrs(attrs)
+        classes = a.get("class", "").lower()
+        itemprop = a.get("itemprop", "").lower()
+        role = a.get("role", "").lower()
+        return (
+            tag == "article"
+            or itemprop == "articlebody"
+            or role == "main"
+            or any(x in classes for x in TARGET_CLASS_HINTS)
+        )
+
+    def _is_junk(self, tag: str, attrs) -> bool:
+        if tag in g.ArticleExtractor.SKIP:
+            return True
+        classes = self._attrs(attrs).get("class", "").lower()
+        return any(x in classes for x in JUNK_CLASS_HINTS)
+
+    def handle_starttag(self, tag, attrs):
+        t = tag.lower()
+        starts_capture = False
+        if not self.found_target and self.capture_depth == 0 and self._is_target(t, attrs):
+            self.found_target = True
+            self.capture_depth = 1
+            starts_capture = True
+        elif self.capture_depth:
+            self.capture_depth += 1
+
+        starts_skip = bool(self.capture_depth and self._is_junk(t, attrs))
+        if starts_skip:
+            self.skip_count += 1
+        self.stack.append((t, starts_skip))
+
+        if self.capture_depth and not self.skip_count and not starts_capture and t in BLOCK_TAGS:
+            self.parts.append("\n")
+
+        if t in VOID_TAGS:
+            _, skipped = self.stack.pop()
+            if skipped and self.skip_count:
+                self.skip_count -= 1
+            if self.capture_depth and not starts_capture:
+                self.capture_depth -= 1
+
+    def handle_startendtag(self, tag, attrs):
+        t = tag.lower()
+        if self.capture_depth and not self.skip_count and t == "br":
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag):
+        t = tag.lower()
+        if not self.stack:
+            return
+
+        popped: list[tuple[str, bool]] = []
+        while self.stack:
+            item = self.stack.pop()
+            popped.append(item)
+            if item[0] == t:
+                break
+
+        for _, started_skip in popped:
+            if started_skip and self.skip_count:
+                self.skip_count -= 1
+            if self.capture_depth:
+                self.capture_depth -= 1
+
+        if self.found_target and not self.skip_count and t in BLOCK_TAGS:
+            self.parts.append("\n")
+
+    def handle_data(self, data):
+        if not self.capture_depth or self.skip_count:
+            return
+        s = data.strip()
+        if s:
+            self.parts.append(s + " ")
+
+    def text(self) -> str:
+        text = "".join(self.parts)
+        text = re.sub(r"[ \t]+", " ", text)
+        return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+class WholePageExtractor(HTMLParser):
+    """Fallback parser for pages without a recognizable article container."""
 
     def __init__(self):
         super().__init__()
@@ -40,30 +147,25 @@ class SafeArticleExtractor(HTMLParser):
     def handle_starttag(self, tag, attrs):
         t = tag.lower()
         classes = " ".join(v or "" for k, v in attrs if k == "class").lower()
-        should_skip = t in self.SKIP or any(x in classes for x in self.JUNK_CLASS_HINTS)
-        inherited_skip = self.skip_count > 0
-        active_skip = inherited_skip or should_skip
-        self.stack.append((t, should_skip))
-        if should_skip:
+        starts_skip = t in g.ArticleExtractor.SKIP or any(x in classes for x in JUNK_CLASS_HINTS)
+        if starts_skip:
             self.skip_count += 1
-        if active_skip:
-            return
-        if t in ("p", "br", "h1", "h2", "h3", "h4", "li", "blockquote"):
+        self.stack.append((t, starts_skip))
+        if not self.skip_count and t in BLOCK_TAGS:
             self.parts.append("\n")
+        if t in VOID_TAGS:
+            _, skipped = self.stack.pop()
+            if skipped and self.skip_count:
+                self.skip_count -= 1
 
     def handle_startendtag(self, tag, attrs):
-        t = tag.lower()
-        if self.skip_count:
-            return
-        if t == "br":
+        if not self.skip_count and tag.lower() == "br":
             self.parts.append("\n")
 
     def handle_endtag(self, tag):
         t = tag.lower()
         if not self.stack:
             return
-
-        # Pop until the matching tag. This is resilient to imperfect HTML.
         popped: list[tuple[str, bool]] = []
         while self.stack:
             item = self.stack.pop()
@@ -73,10 +175,7 @@ class SafeArticleExtractor(HTMLParser):
         for _, started_skip in popped:
             if started_skip and self.skip_count:
                 self.skip_count -= 1
-
-        if self.skip_count:
-            return
-        if t in ("p", "h1", "h2", "h3", "h4", "li", "blockquote", "div"):
+        if not self.skip_count and t in BLOCK_TAGS:
             self.parts.append("\n")
 
     def handle_data(self, data):
@@ -92,10 +191,31 @@ class SafeArticleExtractor(HTMLParser):
         return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
+def extract_article_text_safe(page_html: str, url: str = "") -> str:
+    parser = MainContentExtractor()
+    try:
+        parser.feed(page_html)
+        text = g.clean_body_text(parser.text())
+    except Exception:
+        text = ""
+
+    if len(text) < 300:
+        fallback = WholePageExtractor()
+        try:
+            fallback.feed(page_html)
+            candidate = g.clean_body_text(fallback.text())
+            if len(candidate) > len(text):
+                text = candidate
+        except Exception:
+            pass
+
+    return text[:25000] if len(text) >= 200 else ""
+
+
 def enrich_full_text_all(items: list[dict]) -> None:
     """Try to fetch full HTML for every article; RSS is fallback only."""
-    full = 0
-    fallback = 0
+    page_full = 0
+    rss_fallback = 0
     failed_urls: list[str] = []
 
     for idx, it in enumerate(items, start=1):
@@ -110,19 +230,17 @@ def enrich_full_text_all(items: list[dict]) -> None:
             except UnicodeDecodeError:
                 page = raw.decode("cp1251", errors="ignore")
 
-            extracted = g.extract_article_text(page, it["link"])
-            # Prefer page text whenever it is substantial. Do not require it
-            # to exceed the RSS description by a fixed margin.
+            extracted = extract_article_text_safe(page, it["link"])
             if len(extracted) >= 300:
                 body = extracted
-                full += 1
+                page_full += 1
             else:
                 body = fallback_text
-                fallback += 1
+                rss_fallback += 1
                 failed_urls.append(it["link"])
         except Exception as exc:
             body = fallback_text
-            fallback += 1
+            rss_fallback += 1
             failed_urls.append(it["link"])
             print(f"[WARN] full text {idx}/{len(items)}: {it['source']}: {exc}")
 
@@ -130,7 +248,7 @@ def enrich_full_text_all(items: list[dict]) -> None:
         it["lead"] = g.make_lead(desc, body)
         time.sleep(0.15)
 
-    print(f"Full-text result: page={full}, RSS fallback={fallback}, total={len(items)}")
+    print(f"Full-text result: page={page_full}, RSS fallback={rss_fallback}, total={len(items)}")
     if failed_urls:
         print("[WARN] RSS fallback URLs:")
         for url in failed_urls:
@@ -175,7 +293,7 @@ def validate_epub(path: Path) -> None:
 
 
 def main() -> None:
-    g.ArticleExtractor = SafeArticleExtractor
+    g.extract_article_text = extract_article_text_safe
     g.enrich_full_text = enrich_full_text_all
     g.main()
 
