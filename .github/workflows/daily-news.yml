@@ -20,8 +20,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate EPUB and OPDS
-        run: python3 generate_news_epub.py
+      - name: Generate and validate EPUB and OPDS
+        run: python3 run_daily_news.py
 
       - name: Commit and push
         run: |
@@ -32,7 +32,7 @@ jobs:
             habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub \
             opds-*.xml _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
             generate_news_epub_min.py _p1.txt _p2.txt 2>/dev/null || true
-          git add *.epub opds.xml generate_news_epub.py README.md
+          git add *.epub opds.xml generate_news_epub.py run_daily_news.py README.md
           if git diff --staged --quiet; then
             echo "No changes"
           else
