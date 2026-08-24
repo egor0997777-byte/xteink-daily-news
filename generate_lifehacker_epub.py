@@ -20,6 +20,13 @@ def esc(s: str) -> str:
     return escape(str(s or ""), {'"': '&quot;', "'": '&apos;'})
 
 
+def display_date(issue_date: str) -> str:
+    try:
+        return datetime.strptime(issue_date, "%Y-%m-%d").strftime("%d.%m.%Y")
+    except ValueError:
+        return issue_date
+
+
 def load_input() -> dict:
     data = json.loads(INPUT.read_text(encoding="utf-8"))
     articles = data.get("articles")
@@ -45,14 +52,15 @@ def load_input() -> dict:
 def make_epub(data: dict, path: Path) -> None:
     articles = data["articles"]
     issue_date = str(data.get("date") or datetime.now(timezone(timedelta(hours=3))).date())
-    title = str(data.get("title") or f"Lifehacker · {issue_date}")
+    date_label = display_date(issue_date)
+    title = str(data.get("title") or f"Лайфхакер · {date_label}")
     book_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     body = [
         '<section id="cover">',
-        '<h1>Lifehacker · подборка для головы</h1>',
-        f'<p class="date">{esc(issue_date)}</p>',
+        '<h1>Лайфхакер</h1>',
+        f'<p class="date">{esc(date_label)}</p>',
         f'<p class="meta">{len(articles)} материалов · пересказ и критические замечания ChatGPT</p>',
         '</section>',
         '<hr/>',
@@ -61,11 +69,10 @@ def make_epub(data: dict, path: Path) -> None:
     nav_points = []
     for idx, a in enumerate(articles, 1):
         anchor = f"a{idx}"
-        mark = " · новая идея" if a.get("idea") else ""
         body.append(f'<article id="{anchor}">')
         body.append(f'<h2>{idx}. {esc(a["title"])}</h2>')
-        if mark:
-            body.append('<p class="idea">💡 Может натолкнуть на новую идею</p>')
+        if a.get("idea"):
+            body.append('<p class="idea"><strong>ИДЕЯ ДЛЯ РАЗМЫШЛЕНИЯ</strong></p>')
         body.append(f'<p><strong>Суть.</strong> {esc(a["summary"])}</p>')
         body.append(f'<p><strong>Зачем читать.</strong> {esc(a["why"])}</p>')
         body.append(f'<p><strong>Критическое замечание.</strong> {esc(a["critique"])}</p>')
@@ -92,9 +99,9 @@ h1:first-of-type {{ page-break-before: avoid; }}
 h2 {{ font-size: 1.12em; margin: 1em 0 0.45em; }}
 p {{ margin: 0.5em 0; }}
 #cover {{ text-align: center; margin-top: 2em; }}
-.date {{ font-size: 1.05em; }}
+.date {{ font-size: 1.15em; font-weight: bold; }}
 .meta, .source {{ font-size: 0.84em; }}
-.idea {{ font-style: italic; }}
+.idea {{ font-size: 0.88em; margin: 0.25em 0 0.55em; }}
 .takeaway {{ border-left: 2px solid #777; padding-left: 0.6em; }}
 hr {{ border: none; border-top: 1px solid #bbb; margin: 1em 0; }}
 a {{ text-decoration: underline; }}
@@ -148,13 +155,14 @@ a {{ text-decoration: underline; }}
 
 
 def write_opds(data: dict, epub_name: str) -> None:
-    title = str(data.get("title") or "Lifehacker · подборка")
+    issue_date = str(data.get("date") or datetime.now(timezone(timedelta(hours=3))).date())
+    title = str(data.get("title") or f"Лайфхакер · {display_date(issue_date)}")
     count = len(data["articles"])
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     xml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
 <id>urn:xteink:lifehacker</id>
-<title>Lifehacker · подборка для головы</title>
+<title>Лайфхакер</title>
 <updated>{now}</updated>
 <author><name>ChatGPT</name></author>
 <link rel="self" href="{BASE_RAW}/opds-lifehacker.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
