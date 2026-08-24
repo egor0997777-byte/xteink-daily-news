@@ -33,8 +33,33 @@ jobs:
       - name: Generate EPUB and OPDS
         run: python3 generate_news_epub.py
 
-      - name: Put full articles directly in Main
-        run: python3 promote_main_fulltext.py
+      - name: Run Main full-text postprocessor
+        run: |
+          set +e
+          python3 promote_main_fulltext.py > promote-main.log 2>&1
+          code=$?
+          cat promote-main.log
+          echo "$code" > promote-main-exit.txt
+          exit 0
+
+      - name: Publish postprocessor diagnostic on failure
+        run: |
+          code="$(cat promote-main-exit.txt)"
+          if [ "$code" != "0" ]; then
+            {
+              echo "FAILED: promote_main_fulltext.py exit code $code"
+              echo
+              cat promote-main.log
+            } > tech-build-status.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add tech-build-status.txt
+            git commit -m "Record tech-news build failure"
+            git pull --rebase origin main
+            git push
+            exit 1
+          fi
+          echo "OK: full Main postprocessor passed" > tech-build-status.txt
 
       - name: Commit and push
         run: |
@@ -46,7 +71,7 @@ jobs:
             habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub \
             _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
             generate_news_epub_min.py _p1.txt _p2.txt 2>/dev/null || true
-          git add *.epub opds.xml generate_news_epub.py promote_main_fulltext.py README.md
+          git add *.epub opds.xml generate_news_epub.py promote_main_fulltext.py tech-build-status.txt README.md
           if git diff --staged --quiet; then
             echo "No changes"
           else
