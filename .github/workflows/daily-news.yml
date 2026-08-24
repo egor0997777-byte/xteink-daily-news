@@ -33,6 +33,9 @@ jobs:
       - name: Generate EPUB and OPDS
         run: python3 generate_news_epub.py
 
+      - name: Put full articles directly in Main
+        run: python3 promote_main_fulltext.py
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
@@ -43,7 +46,7 @@ jobs:
             habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub \
             _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
             generate_news_epub_min.py _p1.txt _p2.txt 2>/dev/null || true
-          git add *.epub opds.xml generate_news_epub.py README.md
+          git add *.epub opds.xml generate_news_epub.py promote_main_fulltext.py README.md
           if git diff --staged --quiet; then
             echo "No changes"
           else
