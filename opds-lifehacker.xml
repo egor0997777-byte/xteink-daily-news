@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
 <id>urn:xteink:lifehacker</id>
-<title>Lifehacker · подборка для головы</title>
-<updated>2026-08-23T16:16:24Z</updated>
+<title>Лайфхакер</title>
+<updated>2026-08-24T04:11:32Z</updated>
 <author><name>ChatGPT</name></author>
 <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-lifehacker.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-lifehacker.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <entry>
 <id>urn:xteink:lifehacker:latest</id>
-<title>Lifehacker · подборка для головы · 23.08.2026</title>
-<updated>2026-08-23T16:16:24Z</updated>
+<title>Лайфхакер · 23.08.2026</title>
+<updated>2026-08-24T04:11:32Z</updated>
 <content type="text">10 материалов: пересказ, польза, критика и мысль дня.</content>
 <link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/lifehacker-2026-08-23.epub" type="application/epub+zip"/>
 </entry>
