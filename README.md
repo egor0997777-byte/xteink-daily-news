@@ -35,6 +35,6 @@ https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.x
 - длина заголовка 30–120 символов → +0.5
 
 ### Обновление
-~07:00 МСК (cron 04:00 UTC) + ручной `workflow_dispatch`.
+~06:00 МСК (cron 03:00 UTC) + ручной `workflow_dispatch`.
 
 Только stdlib Python 3.
