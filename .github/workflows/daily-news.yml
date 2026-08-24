@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: x3-publish
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,14 +32,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # remove old multi-epub leftovers and packing artifacts
+          # Do not remove opds-lifehacker.xml: it is a separate active X3 catalog.
           git rm -f --ignore-unmatch \
             habr-*.epub lifehacker.epub vc.epub ixbt.epub 3dnews.epub tproger.epub dtf.epub \
-            opds-*.xml _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
+            _gen.b64 _gen.b64.* gen_part*.py generate_news_epub.full.py \
             generate_news_epub_min.py _p1.txt _p2.txt 2>/dev/null || true
           git add *.epub opds.xml generate_news_epub.py README.md
           if git diff --staged --quiet; then
             echo "No changes"
           else
             git commit -m "Update news $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git pull --rebase origin main
             git push
           fi
