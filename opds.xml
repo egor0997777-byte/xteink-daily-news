@@ -3,17 +3,17 @@
       xmlns:opds="http://opds-spec.org/2010/catalog">
   <id>urn:xteink:daily-news</id>
   <title>Xteink Tech News</title>
-  <updated>2026-08-24T05:02:27Z</updated>
+  <updated>2026-08-25T03:50:03Z</updated>
   <author><name>Xteink Daily News</name></author>
   <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
   <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
   <entry>
     <id>urn:xteink:latest</id>
-    <title>Техновости · 24.08.2026</title>
-    <updated>2026-08-24T05:02:27Z</updated>
-    <content type="text">39 материалов. Разделы: Главное, ИИ, Гаджеты, ИТ, Разработка, Наука.</content>
+    <title>Техновости · 25.08.2026</title>
+    <updated>2026-08-25T03:50:03Z</updated>
+    <content type="text">41 материалов. Разделы: Главное, ИИ, Гаджеты, ИТ, Разработка, Наука.</content>
     <link rel="http://opds-spec.org/acquisition"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-24.epub"
+          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-25.epub"
           type="application/epub+zip"/>
   </entry>
 </feed>
