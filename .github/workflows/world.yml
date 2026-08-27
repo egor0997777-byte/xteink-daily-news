@@ -1,0 +1,77 @@
+name: World Magazine X3 EPUB
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "world/input.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: x3-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate World Magazine EPUB and OPDS
+        run: python3 generate_world_epub.py
+
+      - name: Validate EPUB and OPDS
+        run: |
+          python3 - <<'PY'
+          import json
+          import zipfile
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+
+          data = json.loads(Path("world/input.json").read_text(encoding="utf-8"))
+          issue_date = data["date"]
+          epub = Path(f"world-{issue_date}.epub")
+          assert epub.exists() and epub.stat().st_size > 1000, "EPUB missing or unexpectedly small"
+
+          with zipfile.ZipFile(epub) as zf:
+              names = zf.namelist()
+              assert names and names[0] == "mimetype", "mimetype must be first"
+              assert zf.read("mimetype") == b"application/epub+zip", "wrong mimetype"
+              assert zf.getinfo("mimetype").compress_type == zipfile.ZIP_STORED, "mimetype must be stored"
+              for name in (
+                  "META-INF/container.xml",
+                  "OEBPS/content.opf",
+                  "OEBPS/toc.ncx",
+                  "OEBPS/content.xhtml",
+              ):
+                  assert name in names, f"missing {name}"
+                  ET.fromstring(zf.read(name))
+
+          ET.parse("opds-world.xml")
+          latest = Path("world-latest.epub")
+          assert latest.exists() and latest.read_bytes() == epub.read_bytes(), "latest EPUB mismatch"
+          print(f"Validated {epub} ({epub.stat().st_size} bytes)")
+          PY
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add world-*.epub opds-world.xml
+          if git diff --staged --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "Update World Magazine X3 issue $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git pull --rebase origin main
+            git push
+          fi
