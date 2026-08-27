@@ -2,15 +2,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
 <id>urn:xteink:lifehacker</id>
 <title>Лайфхакер</title>
-<updated>2026-08-26T03:05:04Z</updated>
+<updated>2026-08-27T03:02:14Z</updated>
 <author><name>ChatGPT</name></author>
 <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-lifehacker.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-lifehacker.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <entry>
 <id>urn:xteink:lifehacker:latest</id>
-<title>Лайфхакер · 26.08.2026</title>
-<updated>2026-08-26T03:05:04Z</updated>
+<title>Лайфхакер · 27.08.2026</title>
+<updated>2026-08-27T03:02:14Z</updated>
 <content type="text">14 материалов: пересказ, польза, критика и мысль дня.</content>
-<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/lifehacker-2026-08-26.epub" type="application/epub+zip"/>
+<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/lifehacker-2026-08-27.epub" type="application/epub+zip"/>
 </entry>
 </feed>
