@@ -58,6 +58,7 @@ jobs:
                   ET.fromstring(zf.read(name))
 
           ET.parse("opds-world.xml")
+          ET.parse("opds-lifehacker.xml")
           latest = Path("world-latest.epub")
           assert latest.exists() and latest.read_bytes() == epub.read_bytes(), "latest EPUB mismatch"
           print(f"Validated {epub} ({epub.stat().st_size} bytes)")
@@ -67,7 +68,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add world-*.epub opds-world.xml
+          git add world-*.epub opds-world.xml opds-lifehacker.xml
           if git diff --staged --quiet; then
             echo "No generated changes"
           else
