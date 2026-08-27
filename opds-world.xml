@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
+<id>urn:xteink:world-magazine</id>
+<title>Зарубежный журнал</title>
+<updated>2026-08-27T06:08:35Z</updated>
+<author><name>ChatGPT</name></author>
+<link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<entry>
+<id>urn:xteink:world-magazine:latest</id>
+<title>Зарубежный журнал · 27.08.2026</title>
+<updated>2026-08-27T06:08:35Z</updated>
+<content type="text">15 материалов: русский пересказ, критика и практические выводы.</content>
+<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/world-2026-08-27.epub" type="application/epub+zip"/>
+</entry>
+</feed>
