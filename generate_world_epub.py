@@ -34,18 +34,18 @@ def load_input() -> dict:
         raise ValueError("articles must be a non-empty list")
     if len(articles) > 20:
         raise ValueError("articles must contain at most 20 items")
-    required = ("source", "title", "url", "summary", "why", "critique", "takeaway")
-    seen = set()
-    for i, a in enumerate(articles, 1):
-        if not isinstance(a, dict):
+    required = ("source", "title", "original_title", "url", "summary", "why", "critique", "takeaway")
+    seen_urls = set()
+    for i, article in enumerate(articles, 1):
+        if not isinstance(article, dict):
             raise ValueError(f"article {i} must be an object")
-        missing = [k for k in required if not str(a.get(k, "")).strip()]
+        missing = [k for k in required if not str(article.get(k, "")).strip()]
         if missing:
             raise ValueError(f"article {i} missing fields: {', '.join(missing)}")
-        url = str(a["url"]).split("?")[0].split("#")[0].rstrip("/")
-        if url in seen:
+        url = str(article["url"]).split("?")[0].split("#")[0].rstrip("/")
+        if url in seen_urls:
             raise ValueError(f"duplicate article URL in issue: {url}")
-        seen.add(url)
+        seen_urls.add(url)
     return data
 
 
@@ -61,31 +61,30 @@ def make_epub(data: dict, path: Path) -> None:
         '<section id="cover">',
         '<h1>Зарубежный журнал</h1>',
         f'<p class="date">{esc(date_label)}</p>',
-        f'<p class="meta">{len(articles)} материалов · русский пересказ зарубежной прессы</p>',
-        '</section><hr/>',
+        f'<p class="meta">{len(articles)} материалов · русский пересказ и критические замечания ChatGPT</p>',
+        '</section>',
+        '<hr/>',
         '<h1 id="contents">Сегодня</h1>',
     ]
     nav_points = []
     for idx, a in enumerate(articles, 1):
         anchor = f"a{idx}"
         body.append(f'<article id="{anchor}">')
-        body.append(f'<p class="source-name">{esc(a["source"])}</p>')
         body.append(f'<h2>{idx}. {esc(a["title"])}</h2>')
-        if a.get("original_title"):
-            body.append(f'<p class="original">{esc(a["original_title"])}</p>')
+        body.append(f'<p class="source"><strong>{esc(a["source"])}</strong> · {esc(a["original_title"])}</p>')
         if a.get("idea"):
             body.append('<p class="idea"><strong>ИДЕЯ ДЛЯ РАЗМЫШЛЕНИЯ</strong></p>')
-        body.append(f'<p><strong>Пересказ.</strong> {esc(a["summary"])}</p>')
-        body.append(f'<p><strong>Почему стоит прочитать.</strong> {esc(a["why"])}</p>')
-        body.append(f'<p><strong>Критический взгляд.</strong> {esc(a["critique"])}</p>')
+        body.append(f'<p><strong>Суть.</strong> {esc(a["summary"])}</p>')
+        body.append(f'<p><strong>Зачем читать.</strong> {esc(a["why"])}</p>')
+        body.append(f'<p><strong>Критическое замечание.</strong> {esc(a["critique"])}</p>')
         body.append(f'<p class="takeaway"><strong>Унести с собой:</strong> {esc(a["takeaway"])}</p>')
-        body.append(f'<p class="link"><a href="{esc(a["url"])}">Оригинал: {esc(a["source"])}</a></p>')
+        body.append(f'<p class="source"><a href="{esc(a["url"])}">Оригинал</a></p>')
         body.append('</article><hr/>')
         nav_points.append(
-            f'    <navPoint id="np{idx}" playOrder="{idx}">\n'
-            f'      <navLabel><text>{esc(str(a["title"])[:80])}</text></navLabel>\n'
-            f'      <content src="content.xhtml#{anchor}"/>\n'
-            f'    </navPoint>'
+            f'''    <navPoint id="np{idx}" playOrder="{idx}">\n'''
+            f'''      <navLabel><text>{esc(str(a["title"])[:80])}</text></navLabel>\n'''
+            f'''      <content src="content.xhtml#{anchor}"/>\n'''
+            f'''    </navPoint>'''
         )
 
     xhtml = f'''<?xml version="1.0" encoding="UTF-8"?>
@@ -95,16 +94,14 @@ def make_epub(data: dict, path: Path) -> None:
 <meta charset="utf-8"/>
 <title>{esc(title)}</title>
 <style>
-body {{ font-family: serif; font-size: 1em; line-height: 1.44; margin: 0.75em; }}
+body {{ font-family: serif; font-size: 1em; line-height: 1.42; margin: 0.75em; }}
 h1 {{ font-size: 1.35em; page-break-before: always; margin: 1em 0 0.5em; }}
 h1:first-of-type {{ page-break-before: avoid; }}
-h2 {{ font-size: 1.12em; margin: 0.2em 0 0.45em; }}
+h2 {{ font-size: 1.12em; margin: 1em 0 0.45em; }}
 p {{ margin: 0.5em 0; }}
 #cover {{ text-align: center; margin-top: 2em; }}
 .date {{ font-size: 1.15em; font-weight: bold; }}
-.meta, .link, .original {{ font-size: 0.84em; }}
-.source-name {{ font-size: 0.83em; font-weight: bold; margin-bottom: 0.15em; }}
-.original {{ font-style: italic; margin-top: 0; }}
+.meta, .source {{ font-size: 0.84em; }}
 .idea {{ font-size: 0.88em; margin: 0.25em 0 0.55em; }}
 .takeaway {{ border-left: 2px solid #777; padding-left: 0.6em; }}
 hr {{ border: none; border-top: 1px solid #bbb; margin: 1em 0; }}
@@ -123,7 +120,7 @@ a {{ text-decoration: underline; }}
 <dc:identifier id="BookId">urn:uuid:{book_id}</dc:identifier>
 <dc:title>{esc(title)}</dc:title>
 <dc:language>ru</dc:language>
-<dc:creator>ChatGPT · зарубежная пресса</dc:creator>
+<dc:creator>ChatGPT</dc:creator>
 <dc:date>{now}</dc:date>
 </metadata>
 <manifest>
@@ -158,29 +155,35 @@ a {{ text-decoration: underline; }}
         zf.writestr("OEBPS/content.xhtml", xhtml, compress_type=zipfile.ZIP_DEFLATED)
 
 
-def write_opds(data: dict, epub_name: str) -> None:
+def build_opds_xml(data: dict, epub_name: str, self_name: str, feed_id: str) -> str:
     issue_date = str(data.get("date") or datetime.now(timezone(timedelta(hours=3))).date())
     title = str(data.get("title") or f"Зарубежный журнал · {display_date(issue_date)}")
     count = len(data["articles"])
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
-<id>urn:xteink:world-magazine</id>
+<id>{feed_id}</id>
 <title>Зарубежный журнал</title>
 <updated>{now}</updated>
 <author><name>ChatGPT</name></author>
-<link rel="self" href="{BASE_RAW}/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-<link rel="start" href="{BASE_RAW}/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<link rel="self" href="{BASE_RAW}/{self_name}" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<link rel="start" href="{BASE_RAW}/{self_name}" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <entry>
-<id>urn:xteink:world-magazine:latest</id>
+<id>urn:xteink:world:latest</id>
 <title>{esc(title)}</title>
 <updated>{now}</updated>
-<content type="text">{count} материалов: русский пересказ, критика и практические выводы.</content>
+<content type="text">{count} материалов: русский пересказ, польза, критика и практические выводы.</content>
 <link rel="http://opds-spec.org/acquisition" href="{BASE_RAW}/{epub_name}" type="application/epub+zip"/>
 </entry>
 </feed>
 '''
-    (OUT_DIR / "opds-world.xml").write_text(xml, encoding="utf-8")
+
+
+def write_opds(data: dict, epub_name: str) -> None:
+    primary = build_opds_xml(data, epub_name, "opds-world.xml", "urn:xteink:world")
+    compat = build_opds_xml(data, epub_name, "opds-lifehacker.xml", "urn:xteink:world-compat")
+    (OUT_DIR / "opds-world.xml").write_text(primary, encoding="utf-8")
+    (OUT_DIR / "opds-lifehacker.xml").write_text(compat, encoding="utf-8")
 
 
 def main() -> None:
