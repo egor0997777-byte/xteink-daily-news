@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
+<id>urn:xteink:book-digests</id><title>Книжные выжимки</title><updated>2026-08-30T17:30:00Z</updated><author><name>ChatGPT</name></author>
+<link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-books.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+<entry><id>urn:xteink:book-digests:kevin-maguire-new-fatherhood-2026</id><title>Новое отцовство — идеи Кевина Магуайра</title><updated>2026-08-30T17:30:00Z</updated><content type="text">Подробный русский пересказ идей Kevin Maguire о современном отцовстве.</content><link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/books/kevin-maguire-new-fatherhood-2026.epub" type="application/epub+zip"/></entry>
+</feed>
