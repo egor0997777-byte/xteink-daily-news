@@ -34,7 +34,7 @@ def load_input() -> dict:
         raise ValueError("articles must be a non-empty list")
     if len(articles) > 20:
         raise ValueError("articles must contain at most 20 items")
-    required = ("source", "title", "original_title", "url", "summary", "why", "critique", "takeaway")
+    required = ("source", "title", "original_title", "url", "summary")
     seen_urls = set()
     for i, article in enumerate(articles, 1):
         if not isinstance(article, dict):
@@ -49,6 +49,11 @@ def load_input() -> dict:
     return data
 
 
+def summary_paragraphs(text: str) -> list[str]:
+    parts = [p.strip() for p in str(text).replace("\r\n", "\n").split("\n\n") if p.strip()]
+    return parts or [str(text).strip()]
+
+
 def make_epub(data: dict, path: Path) -> None:
     articles = data["articles"]
     issue_date = str(data.get("date") or datetime.now(timezone(timedelta(hours=3))).date())
@@ -61,7 +66,7 @@ def make_epub(data: dict, path: Path) -> None:
         '<section id="cover">',
         '<h1>Зарубежный журнал</h1>',
         f'<p class="date">{esc(date_label)}</p>',
-        f'<p class="meta">{len(articles)} материалов · русский пересказ и критические замечания ChatGPT</p>',
+        f'<p class="meta">{len(articles)} материалов · зарубежные статьи в русском журнальном пересказе</p>',
         '</section>',
         '<hr/>',
         '<h1 id="contents">Сегодня</h1>',
@@ -72,12 +77,8 @@ def make_epub(data: dict, path: Path) -> None:
         body.append(f'<article id="{anchor}">')
         body.append(f'<h2>{idx}. {esc(a["title"])}</h2>')
         body.append(f'<p class="source"><strong>{esc(a["source"])}</strong> · {esc(a["original_title"])}</p>')
-        if a.get("idea"):
-            body.append('<p class="idea"><strong>ИДЕЯ ДЛЯ РАЗМЫШЛЕНИЯ</strong></p>')
-        body.append(f'<p><strong>Суть.</strong> {esc(a["summary"])}</p>')
-        body.append(f'<p><strong>Зачем читать.</strong> {esc(a["why"])}</p>')
-        body.append(f'<p><strong>Критическое замечание.</strong> {esc(a["critique"])}</p>')
-        body.append(f'<p class="takeaway"><strong>Унести с собой:</strong> {esc(a["takeaway"])}</p>')
+        for paragraph in summary_paragraphs(a["summary"]):
+            body.append(f'<p>{esc(paragraph)}</p>')
         body.append(f'<p class="source"><a href="{esc(a["url"])}">Оригинал</a></p>')
         body.append('</article><hr/>')
         nav_points.append(
@@ -94,16 +95,14 @@ def make_epub(data: dict, path: Path) -> None:
 <meta charset="utf-8"/>
 <title>{esc(title)}</title>
 <style>
-body {{ font-family: serif; font-size: 1em; line-height: 1.42; margin: 0.75em; }}
+body {{ font-family: serif; font-size: 1em; line-height: 1.46; margin: 0.75em; }}
 h1 {{ font-size: 1.35em; page-break-before: always; margin: 1em 0 0.5em; }}
 h1:first-of-type {{ page-break-before: avoid; }}
 h2 {{ font-size: 1.12em; margin: 1em 0 0.45em; }}
-p {{ margin: 0.5em 0; }}
+p {{ margin: 0.62em 0; }}
 #cover {{ text-align: center; margin-top: 2em; }}
 .date {{ font-size: 1.15em; font-weight: bold; }}
 .meta, .source {{ font-size: 0.84em; }}
-.idea {{ font-size: 0.88em; margin: 0.25em 0 0.55em; }}
-.takeaway {{ border-left: 2px solid #777; padding-left: 0.6em; }}
 hr {{ border: none; border-top: 1px solid #bbb; margin: 1em 0; }}
 a {{ text-decoration: underline; }}
 </style>
@@ -172,7 +171,7 @@ def build_opds_xml(data: dict, epub_name: str, self_name: str, feed_id: str) -> 
 <id>urn:xteink:world:latest</id>
 <title>{esc(title)}</title>
 <updated>{now}</updated>
-<content type="text">{count} материалов: русский пересказ, польза, критика и практические выводы.</content>
+<content type="text">{count} материалов: зарубежные статьи в русском журнальном пересказе.</content>
 <link rel="http://opds-spec.org/acquisition" href="{BASE_RAW}/{epub_name}" type="application/epub+zip"/>
 </entry>
 </feed>
