@@ -1,19 +1,2 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"
-      xmlns:opds="http://opds-spec.org/2010/catalog">
-  <id>urn:xteink:daily-news</id>
-  <title>Xteink Tech News</title>
-  <updated>2026-08-30T08:57:16Z</updated>
-  <author><name>Xteink Daily News</name></author>
-  <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-  <entry>
-    <id>urn:xteink:latest</id>
-    <title>Техновости · 30.08.2026</title>
-    <updated>2026-08-30T08:57:16Z</updated>
-    <content type="text">34 материалов. Разделы: Главное, ИИ, Гаджеты, ИТ, Разработка, Наука.</content>
-    <link rel="http://opds-spec.org/acquisition"
-          href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-30.epub"
-          type="application/epub+zip"/>
-  </entry>
-</feed>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog"><id>urn:xteink:tech-digest</id><title>Техноновости для Xteink X3</title><updated>2026-08-30T19:15:31Z</updated><author><name>Технодайджест X3</name></author><entry><title>Техноновости — 30 августа 2026</title><id>urn:xteink:tech:2026-08-30</id><updated>2026-08-30T19:15:31Z</updated><content type="text">20 новостей — связный пересказ без RSS-разметки.</content><link rel="http://opds-spec.org/acquisition" type="application/epub+zip" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/2026-08-30.epub"/><link rel="http://opds-spec.org/acquisition" type="application/epub+zip" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/latest.epub"/></entry></feed>
