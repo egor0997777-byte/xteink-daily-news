@@ -6,23 +6,52 @@ import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val Accent = Color(0xFF6E5BC7)
+private val AppBg = Color(0xFFF7F7FA)
+private val SoftSurface = Color(0xFFF0EFF4)
+private val Hairline = Color(0xFFE5E3EA)
+private val Muted = Color(0xFF74717D)
+private val Danger = Color(0xFFC93B46)
+
+private val MeterColors = lightColorScheme(
+    primary = Accent,
+    onPrimary = Color.White,
+    background = AppBg,
+    onBackground = Color(0xFF111114),
+    surface = Color.White,
+    onSurface = Color(0xFF111114),
+    surfaceVariant = SoftSurface,
+    onSurfaceVariant = Muted,
+    outline = Hairline,
+    error = Danger
+)
 
 class OcrMainActivity : ComponentActivity() {
     private var pendingPhotoUri: Uri? = null
@@ -39,7 +68,7 @@ class OcrMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val repository = MeterRepository(this)
         setContent {
-            MaterialTheme {
+            MaterialTheme(colorScheme = MeterColors) {
                 OcrMeterApp(repository) { callback -> launchCamera(callback) }
             }
         }
@@ -55,15 +84,15 @@ class OcrMainActivity : ComponentActivity() {
     }
 }
 
-private data class OcrPreset(val title: String, val unit: String, val kind: String, val icon: String)
+private data class OcrPreset(val title: String, val unit: String, val kind: String, val mark: String)
 
 private val ocrPresets = listOf(
-    OcrPreset("Холодная вода", "м³", "cold_water", "💧"),
-    OcrPreset("Горячая вода", "м³", "hot_water", "♨️"),
-    OcrPreset("Электричество", "кВт·ч", "electricity", "⚡"),
-    OcrPreset("Газ", "м³", "gas", "🔥"),
-    OcrPreset("Отопление", "Гкал", "heating", "🌡️"),
-    OcrPreset("Другой", "ед.", "other", "◉")
+    OcrPreset("Холодная вода", "м³", "cold_water", "ХВ"),
+    OcrPreset("Горячая вода", "м³", "hot_water", "ГВ"),
+    OcrPreset("Электричество", "кВт·ч", "electricity", "ЭЭ"),
+    OcrPreset("Газ", "м³", "gas", "Г"),
+    OcrPreset("Отопление", "Гкал", "heating", "Т"),
+    OcrPreset("Другой", "ед.", "other", "•")
 )
 
 @Composable
@@ -80,106 +109,182 @@ private fun OcrMeterApp(repository: MeterRepository, onTakePhoto: (((String?) ->
     val address = addresses.firstOrNull { it.id == addressId }
     val meter = address?.meters?.firstOrNull { it.id == meterId }
 
-    when {
-        address == null -> OcrHomeScreen(
-            addresses = addresses,
-            onOpen = { addressId = it },
-            onAdd = { save(addresses + Address(name = it)) },
-            onDelete = { id -> save(addresses.filterNot { it.id == id }) }
-        )
+    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+        when {
+            address == null -> HomeScreen(
+                addresses = addresses,
+                onOpen = { addressId = it },
+                onAdd = { save(addresses + Address(name = it)) },
+                onDelete = { id -> save(addresses.filterNot { it.id == id }) }
+            )
 
-        meter == null -> OcrAddressScreen(
-            address = address,
-            onBack = { addressId = null },
-            onOpenMeter = { meterId = it },
-            onAddMeter = { preset, name, serial ->
-                save(addresses.map { a ->
-                    if (a.id == address.id) a.copy(meters = a.meters + Meter(name = name, unit = preset.unit, kind = preset.kind, serial = serial)) else a
-                })
-            },
-            onDeleteMeter = { id ->
-                save(addresses.map { a ->
-                    if (a.id == address.id) a.copy(meters = a.meters.filterNot { it.id == id }) else a
-                })
-            }
-        )
+            meter == null -> AddressScreen(
+                address = address,
+                onBack = { addressId = null },
+                onOpenMeter = { meterId = it },
+                onAddMeter = { preset, name, serial ->
+                    save(addresses.map { a ->
+                        if (a.id == address.id) a.copy(meters = a.meters + Meter(name = name, unit = preset.unit, kind = preset.kind, serial = serial)) else a
+                    })
+                },
+                onDeleteMeter = { id ->
+                    save(addresses.map { a ->
+                        if (a.id == address.id) a.copy(meters = a.meters.filterNot { it.id == id }) else a
+                    })
+                }
+            )
 
-        else -> OcrMeterScreen(
-            meter = meter,
-            onBack = { meterId = null },
-            onTakePhoto = onTakePhoto,
-            onAddReading = { value, photo, note ->
-                save(addresses.map { a ->
-                    if (a.id != address.id) a else a.copy(meters = a.meters.map { m ->
-                        if (m.id == meter.id) m.copy(readings = m.readings + Reading(value = value, photoUri = photo, note = note)) else m
+            else -> MeterScreen(
+                meter = meter,
+                onBack = { meterId = null },
+                onTakePhoto = onTakePhoto,
+                onAddReading = { value, photo, note ->
+                    save(addresses.map { a ->
+                        if (a.id != address.id) a else a.copy(meters = a.meters.map { m ->
+                            if (m.id == meter.id) m.copy(readings = m.readings + Reading(value = value, photoUri = photo, note = note)) else m
+                        })
                     })
-                })
-            },
-            onDeleteReading = { id ->
-                save(addresses.map { a ->
-                    if (a.id != address.id) a else a.copy(meters = a.meters.map { m ->
-                        if (m.id == meter.id) m.copy(readings = m.readings.filterNot { it.id == id }) else m
+                },
+                onDeleteReading = { id ->
+                    save(addresses.map { a ->
+                        if (a.id != address.id) a else a.copy(meters = a.meters.map { m ->
+                            if (m.id == meter.id) m.copy(readings = m.readings.filterNot { it.id == id }) else m
+                        })
                     })
-                })
-            }
-        )
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun OcrHomeScreen(addresses: List<Address>, onOpen: (String) -> Unit, onAdd: (String) -> Unit, onDelete: (String) -> Unit) {
+private fun ScreenFrame(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun HomeScreen(
+    addresses: List<Address>,
+    onOpen: (String) -> Unit,
+    onAdd: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
     var showAdd by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<Address?>(null) }
     val meters = addresses.sumOf { it.meters.size }
     val readings = addresses.sumOf { a -> a.meters.sumOf { it.readings.size } }
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        Text("Мои счётчики", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Фото, распознавание и история показаний", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OcrSummaryCard("Адресов", addresses.size.toString(), Modifier.weight(1f))
-            OcrSummaryCard("Счётчиков", meters.toString(), Modifier.weight(1f))
-            OcrSummaryCard("Записей", readings.toString(), Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(18.dp))
+    ScreenFrame {
+        Text("Мои счётчики", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
+        Text("Показания без лишних действий", color = Muted, fontSize = 17.sp)
+        Spacer(Modifier.height(20.dp))
 
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(addresses, key = { it.id }) { address ->
-                Card(onClick = { onOpen(address.id) }, modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(address.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                            Text("${address.meters.size} счётчиков", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SummaryCard(addresses.size.toString(), "Адресов", Modifier.weight(1f))
+            SummaryCard(meters.toString(), "Счётчиков", Modifier.weight(1f))
+            SummaryCard(readings.toString(), "Записей", Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(24.dp))
+
+        Text("Адреса", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(10.dp))
+
+        if (addresses.isEmpty()) {
+            EmptyCard("Добавьте первый адрес", "Квартира, дом, дача или любой другой объект.")
+            Spacer(Modifier.weight(1f))
+        } else {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(addresses, key = { it.id }) { address ->
+                    val latest = address.meters.flatMap { it.readings }.maxByOrNull { it.timestamp }
+                    Card(
+                        onClick = { onOpen(address.id) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                            CircleMark("⌂")
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(address.name, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    if (address.meters.isEmpty()) "Счётчиков пока нет" else "${address.meters.size} ${pluralMeter(address.meters.size)}",
+                                    color = Muted,
+                                    fontSize = 14.sp
+                                )
+                                if (latest != null) Text("Обновлено ${ocrDate(latest.timestamp)}", color = Muted, fontSize = 13.sp)
+                            }
+                            TextButton(onClick = { deleteTarget = address }) { Text("•••", fontSize = 20.sp) }
                         }
-                        TextButton(onClick = { deleteTarget = address }) { Text("Удалить") }
                     }
                 }
             }
         }
-        Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth()) { Text("+ Добавить адрес") }
+
+        PrimaryButton("Добавить адрес") { showAdd = true }
     }
 
-    if (showAdd) OcrTextDialog("Новый адрес", "Название или адрес", { showAdd = false }) { onAdd(it); showAdd = false }
+    if (showAdd) TextModal(
+        title = "Новый адрес",
+        confirmTitle = "Добавить",
+        onDismiss = { showAdd = false }
+    ) { close, confirm ->
+        var text by remember { mutableStateOf("") }
+        AppTextField(
+            value = text,
+            onValueChange = { text = it },
+            label = "Название или адрес",
+            placeholder = "Например, Квартира",
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
+        )
+        ModalActions(
+            onCancel = close,
+            onConfirm = { onAdd(text.trim()); confirm() },
+            confirmTitle = "Добавить",
+            enabled = text.isNotBlank()
+        )
+    }
+
     deleteTarget?.let { target ->
-        OcrConfirmDialog("Удалить адрес?", "Удалятся все счётчики и показания по адресу «${target.name}».", { deleteTarget = null }) {
-            onDelete(target.id); deleteTarget = null
+        ConfirmDialog(
+            title = "Удалить адрес?",
+            text = "Все счётчики и показания по адресу «${target.name}» будут удалены.",
+            onDismiss = { deleteTarget = null },
+            onConfirm = { onDelete(target.id); deleteTarget = null }
+        )
+    }
+}
+
+@Composable
+private fun SummaryCard(value: String, label: String, modifier: Modifier) {
+    Surface(modifier, shape = RoundedCornerShape(20.dp), color = SoftSurface) {
+        Column(Modifier.padding(14.dp)) {
+            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text(label, fontSize = 13.sp, color = Muted)
         }
     }
 }
 
 @Composable
-private fun OcrSummaryCard(label: String, value: String, modifier: Modifier) {
-    Card(modifier) {
-        Column(Modifier.padding(12.dp)) {
-            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.bodySmall)
+private fun EmptyCard(title: String, text: String) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = Color.White) {
+        Column(Modifier.padding(20.dp)) {
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
+            Text(text, color = Muted, fontSize = 15.sp)
         }
     }
 }
 
 @Composable
-private fun OcrAddressScreen(
+private fun AddressScreen(
     address: Address,
     onBack: () -> Unit,
     onOpenMeter: (String) -> Unit,
@@ -189,53 +294,74 @@ private fun OcrAddressScreen(
     var showAdd by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<Meter?>(null) }
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        TextButton(onClick = onBack) { Text("← Все адреса") }
-        Text(address.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(16.dp))
+    ScreenFrame {
+        BackLink("Все адреса", onBack)
+        Spacer(Modifier.height(2.dp))
+        Text(address.name, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        Text("${address.meters.size} ${pluralMeter(address.meters.size)}", color = Muted, fontSize = 16.sp)
+        Spacer(Modifier.height(18.dp))
 
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(address.meters, key = { it.id }) { meter ->
-                val sorted = meter.readings.sortedByDescending { it.timestamp }
-                val latest = sorted.firstOrNull()
-                val previous = sorted.getOrNull(1)
-                Card(onClick = { onOpenMeter(meter.id) }, modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(ocrIcon(meter.kind), style = MaterialTheme.typography.headlineSmall)
-                            Spacer(Modifier.width(10.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(meter.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                                if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", style = MaterialTheme.typography.bodySmall)
+        if (address.meters.isEmpty()) {
+            EmptyCard("Добавьте счётчик", "Выберите тип, укажите название и при необходимости серийный номер.")
+            Spacer(Modifier.weight(1f))
+        } else {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(address.meters, key = { it.id }) { meter ->
+                    val sorted = meter.readings.sortedByDescending { it.timestamp }
+                    val latest = sorted.firstOrNull()
+                    val previous = sorted.getOrNull(1)
+                    Card(
+                        onClick = { onOpenMeter(meter.id) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(Modifier.padding(18.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                MeterBadge(meter.kind)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(meter.name, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                                    if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 13.sp)
+                                }
+                                TextButton(onClick = { deleteTarget = meter }) { Text("•••", fontSize = 20.sp) }
                             }
-                            TextButton(onClick = { deleteTarget = meter }) { Text("Удалить") }
-                        }
-                        if (latest != null) {
-                            Spacer(Modifier.height(8.dp))
-                            Text("${ocrFormat(latest.value)} ${meter.unit}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                            if (previous != null) Text("Расход: ${ocrFormat(latest.value - previous.value)} ${meter.unit}")
-                            Text(ocrDate(latest.timestamp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        } else {
-                            Spacer(Modifier.height(8.dp))
-                            Text("Показаний ещё нет", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(10.dp))
+                            if (latest == null) {
+                                Text("Нет показаний", color = Muted)
+                            } else {
+                                Text("${ocrFormat(latest.value)} ${meter.unit}", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(ocrDate(latest.timestamp), color = Muted, fontSize = 13.sp)
+                                    if (previous != null) Text("Расход ${ocrFormat(latest.value - previous.value)} ${meter.unit}", color = Muted, fontSize = 13.sp)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth()) { Text("+ Добавить счётчик") }
+
+        PrimaryButton("Добавить счётчик") { showAdd = true }
     }
 
-    if (showAdd) OcrAddMeterDialog({ showAdd = false }) { preset, name, serial -> onAddMeter(preset, name, serial); showAdd = false }
+    if (showAdd) AddMeterModal(
+        onDismiss = { showAdd = false },
+        onConfirm = { preset, name, serial -> onAddMeter(preset, name, serial); showAdd = false }
+    )
+
     deleteTarget?.let { meter ->
-        OcrConfirmDialog("Удалить счётчик?", "История «${meter.name}» тоже будет удалена.", { deleteTarget = null }) {
-            onDeleteMeter(meter.id); deleteTarget = null
-        }
+        ConfirmDialog(
+            title = "Удалить счётчик?",
+            text = "История «${meter.name}» тоже будет удалена.",
+            onDismiss = { deleteTarget = null },
+            onConfirm = { onDeleteMeter(meter.id); deleteTarget = null }
+        )
     }
 }
 
 @Composable
-private fun OcrMeterScreen(
+private fun MeterScreen(
     meter: Meter,
     onBack: () -> Unit,
     onTakePhoto: (((String?) -> Unit) -> Unit),
@@ -248,66 +374,158 @@ private fun OcrMeterScreen(
     val latest = sorted.firstOrNull()
     val previous = sorted.getOrNull(1)
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        TextButton(onClick = onBack) { Text("← Счётчики") }
-        Text("${ocrIcon(meter.kind)} ${meter.name}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        if (meter.serial.isNotBlank()) Text("Серийный номер: ${meter.serial}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(14.dp))
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(18.dp)) {
-                if (latest == null) {
-                    Text("Нет показаний", fontWeight = FontWeight.SemiBold)
-                    Text("Сделайте фото — приложение попробует прочитать цифры автоматически.")
-                } else {
-                    Text("Текущее показание", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("${ocrFormat(latest.value)} ${meter.unit}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                    Text(ocrDate(latest.timestamp))
-                    if (previous != null) {
-                        Spacer(Modifier.height(8.dp))
-                        Text("Расход: ${ocrFormat(latest.value - previous.value)} ${meter.unit}", fontWeight = FontWeight.SemiBold)
-                    }
-                }
+    ScreenFrame {
+        BackLink("Счётчики", onBack)
+        Spacer(Modifier.height(2.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MeterBadge(meter.kind)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(meter.name, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 14.sp)
             }
         }
-
         Spacer(Modifier.height(18.dp))
-        Text("История", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(8.dp))
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(sorted, key = { it.id }) { reading ->
-                Card(Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("${ocrFormat(reading.value)} ${meter.unit}", fontWeight = FontWeight.SemiBold)
-                            Text(ocrDateTime(reading.timestamp), style = MaterialTheme.typography.bodySmall)
-                            if (reading.note.isNotBlank()) Text(reading.note, style = MaterialTheme.typography.bodySmall)
-                        }
-                        if (reading.photoUri != null) Text("📷")
-                        TextButton(onClick = { deleteTarget = reading }) { Text("Удалить") }
+
+        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = Color.White) {
+            Column(Modifier.padding(20.dp)) {
+                Text("Текущее показание", color = Muted, fontSize = 14.sp)
+                if (latest == null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("—", fontSize = 42.sp, fontWeight = FontWeight.Bold)
+                    Text("Добавьте первое показание", color = Muted)
+                } else {
+                    Text("${ocrFormat(latest.value)} ${meter.unit}", fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                    Text(ocrDate(latest.timestamp), color = Muted, fontSize = 14.sp)
+                    if (previous != null) {
+                        Spacer(Modifier.height(14.dp))
+                        HorizontalDivider(color = Hairline)
+                        Spacer(Modifier.height(14.dp))
+                        Text("Расход с прошлого раза", color = Muted, fontSize = 14.sp)
+                        Text("${ocrFormat(latest.value - previous.value)} ${meter.unit}", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
-        Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth()) { Text("📷 Новое показание") }
+
+        Spacer(Modifier.height(22.dp))
+        Text("История", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(10.dp))
+
+        if (sorted.isEmpty()) {
+            Text("Здесь появятся сохранённые показания.", color = Muted)
+            Spacer(Modifier.weight(1f))
+        } else {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(sorted, key = { it.id }) { reading ->
+                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = Color.White) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("${ocrFormat(reading.value)} ${meter.unit}", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                                Text(ocrDateTime(reading.timestamp), color = Muted, fontSize = 13.sp)
+                                if (reading.note.isNotBlank()) Text(reading.note, color = Muted, fontSize = 13.sp)
+                            }
+                            if (reading.photoUri != null) Text("Фото", color = Accent, fontSize = 13.sp)
+                            TextButton(onClick = { deleteTarget = reading }) { Text("•••", fontSize = 20.sp) }
+                        }
+                    }
+                }
+            }
+        }
+
+        PrimaryButton("Новое показание") { showAdd = true }
     }
 
-    if (showAdd) {
-        OcrAddReadingDialog(meter.unit, latest?.value, onTakePhoto, { showAdd = false }) { value, photo, note ->
-            onAddReading(value, photo, note); showAdd = false
-        }
-    }
+    if (showAdd) AddReadingModal(
+        meter = meter,
+        previousValue = latest?.value,
+        onTakePhoto = onTakePhoto,
+        onDismiss = { showAdd = false },
+        onConfirm = { value, photo, note -> onAddReading(value, photo, note); showAdd = false }
+    )
 
     deleteTarget?.let { reading ->
-        OcrConfirmDialog("Удалить показание?", "Запись ${ocrDate(reading.timestamp)} будет удалена.", { deleteTarget = null }) {
-            onDeleteReading(reading.id); deleteTarget = null
+        ConfirmDialog(
+            title = "Удалить показание?",
+            text = "Запись от ${ocrDate(reading.timestamp)} будет удалена.",
+            onDismiss = { deleteTarget = null },
+            onConfirm = { onDeleteReading(reading.id); deleteTarget = null }
+        )
+    }
+}
+
+@Composable
+private fun AddMeterModal(onDismiss: () -> Unit, onConfirm: (OcrPreset, String, String) -> Unit) {
+    var selected by remember { mutableStateOf(ocrPresets.first()) }
+    var name by remember { mutableStateOf(selected.title) }
+    var serial by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 690.dp),
+            shape = RoundedCornerShape(30.dp),
+            color = Color.White
+        ) {
+            Column(Modifier.padding(22.dp).verticalScroll(rememberScrollState())) {
+                Text("Новый счётчик", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text("Выберите тип", color = Muted, fontSize = 15.sp)
+                Spacer(Modifier.height(16.dp))
+
+                ocrPresets.chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { preset ->
+                            val active = selected.kind == preset.kind
+                            Surface(
+                                onClick = { selected = preset; name = preset.title },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(18.dp),
+                                color = if (active) Accent.copy(alpha = 0.13f) else SoftSurface,
+                                border = if (active) androidx.compose.foundation.BorderStroke(1.dp, Accent) else null
+                            ) {
+                                Column(Modifier.padding(14.dp)) {
+                                    Text(preset.mark, color = Accent, fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(preset.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text(preset.unit, color = Muted, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                Spacer(Modifier.height(8.dp))
+                AppTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = "Название",
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next)
+                )
+                Spacer(Modifier.height(12.dp))
+                AppTextField(
+                    value = serial,
+                    onValueChange = { serial = it.take(40) },
+                    label = "Серийный номер",
+                    placeholder = "Необязательно",
+                    supporting = "Можно вводить цифры, русские и английские буквы",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                        autoCorrectEnabled = false
+                    )
+                )
+                Spacer(Modifier.height(8.dp))
+                ModalActions(onCancel = onDismiss, onConfirm = { onConfirm(selected, name.trim(), serial.trim()) }, confirmTitle = "Добавить", enabled = name.isNotBlank())
+            }
         }
     }
 }
 
 @Composable
-private fun OcrAddReadingDialog(
-    unit: String,
+private fun AddReadingModal(
+    meter: Meter,
     previousValue: Double?,
     onTakePhoto: (((String?) -> Unit) -> Unit),
     onDismiss: () -> Unit,
@@ -325,136 +543,270 @@ private fun OcrAddReadingDialog(
     val parsed = valueText.replace(',', '.').toDoubleOrNull()
     val isLower = parsed != null && previousValue != null && parsed < previousValue
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Новое показание") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (previousValue != null) Text("Предыдущее: ${ocrFormat(previousValue)} $unit")
+    Dialog(onDismissRequest = { if (!recognizing) onDismiss() }) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 720.dp),
+            shape = RoundedCornerShape(30.dp),
+            color = Color.White
+        ) {
+            Column(Modifier.padding(22.dp).verticalScroll(rememberScrollState())) {
+                Text("Новое показание", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text(meter.name, color = Muted, fontSize = 15.sp)
+                Spacer(Modifier.height(18.dp))
 
-                Button(
+                Surface(
                     onClick = {
-                        onTakePhoto { uri ->
-                            photoUri = uri
-                            if (uri != null) {
-                                recognizing = true
-                                ocrStatus = "Распознаю показание…"
-                                MeterOcr.recognize(context, uri, previousValue) { result ->
-                                    recognizing = false
-                                    result.onSuccess { value ->
-                                        if (value != null) {
-                                            valueText = ocrFormat(value)
-                                            ocrStatus = "Распознано: ${ocrFormat(value)} $unit. Проверьте цифры перед сохранением."
-                                        } else {
-                                            ocrStatus = "Число на фото не найдено. Введите показание вручную."
+                        if (!recognizing) {
+                            onTakePhoto { uri ->
+                                photoUri = uri
+                                if (uri != null) {
+                                    recognizing = true
+                                    ocrStatus = "Распознаю цифры…"
+                                    MeterOcr.recognize(context, uri, previousValue) { result ->
+                                        recognizing = false
+                                        result.onSuccess { value ->
+                                            if (value != null) {
+                                                valueText = ocrFormat(value)
+                                                ocrStatus = "Распознано автоматически. Проверьте значение."
+                                            } else {
+                                                ocrStatus = "Не удалось уверенно найти показание. Введите его вручную."
+                                            }
+                                        }.onFailure {
+                                            ocrStatus = "Не удалось распознать фото. Введите показание вручную."
                                         }
-                                    }.onFailure {
-                                        ocrStatus = "Не удалось распознать фото. Введите показание вручную."
                                     }
                                 }
                             }
                         }
                     },
-                    enabled = !recognizing,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(if (photoUri == null) "📷 Сфотографировать и распознать" else "📷 Переснять и распознать") }
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    color = SoftSurface
+                ) {
+                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(if (photoUri == null) "Сделать фото" else "Переснять фото", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+                        Text(if (photoUri == null) "Распознаю показание автоматически" else "Фото добавлено к записи", color = Muted, fontSize = 13.sp)
+                    }
+                }
 
-                ocrStatus?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                if (recognizing) {
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+                ocrStatus?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, color = Muted, fontSize = 13.sp)
+                }
 
-                OutlinedTextField(
-                    value = valueText,
-                    onValueChange = { valueText = it; error = null },
-                    label = { Text("Показание, $unit") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Spacer(Modifier.height(18.dp))
+                Text("Показание", color = Muted, fontSize = 14.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = valueText,
+                        onValueChange = { raw -> valueText = sanitizeNumber(raw); error = null },
+                        modifier = Modifier.weight(1f),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 30.sp, fontWeight = FontWeight.SemiBold),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                        singleLine = true,
+                        shape = RoundedCornerShape(18.dp),
+                        placeholder = { Text("0") }
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(meter.unit, color = Muted, fontSize = 16.sp)
+                }
 
+                if (previousValue != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Предыдущее: ${ocrFormat(previousValue)} ${meter.unit}", color = Muted, fontSize = 13.sp)
+                }
                 if (parsed != null && previousValue != null && parsed >= previousValue) {
-                    Text("Расход: ${ocrFormat(parsed - previousValue)} $unit", color = MaterialTheme.colorScheme.primary)
+                    Text("Расход: ${ocrFormat(parsed - previousValue)} ${meter.unit}", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
                 if (isLower) {
-                    Text("Значение меньше предыдущего.", color = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Значение меньше предыдущего", color = Danger, fontSize = 14.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = allowLower, onCheckedChange = { allowLower = it })
-                        Text("Счётчик заменён — сохранить всё равно")
+                        Text("Счётчик заменён", fontSize = 14.sp)
                     }
                 }
 
-                OutlinedTextField(note, { note = it }, label = { Text("Комментарий — необязательно") }, modifier = Modifier.fillMaxWidth())
-                if (photoUri != null) Text("✓ Фото будет сохранено вместе с показанием", style = MaterialTheme.typography.bodySmall)
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    when {
-                        parsed == null -> error = "Введите корректное число"
-                        parsed < 0 -> error = "Показание не может быть отрицательным"
-                        isLower && !allowLower -> error = "Подтвердите замену счётчика или исправьте значение"
-                        else -> onConfirm(parsed, photoUri, note.trim())
-                    }
-                },
-                enabled = parsed != null && !recognizing
-            ) { Text("Сохранить") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
-    )
-}
-
-@Composable
-private fun OcrAddMeterDialog(onDismiss: () -> Unit, onConfirm: (OcrPreset, String, String) -> Unit) {
-    var selected by remember { mutableStateOf(ocrPresets.first()) }
-    var name by remember { mutableStateOf(selected.title) }
-    var serial by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Новый счётчик") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ocrPresets.forEach { preset ->
-                    FilterChip(
-                        selected = selected.kind == preset.kind,
-                        onClick = { selected = preset; name = preset.title },
-                        label = { Text("${preset.icon} ${preset.title} · ${preset.unit}") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Spacer(Modifier.height(14.dp))
+                AppTextField(
+                    value = note,
+                    onValueChange = { note = it.take(200) },
+                    label = "Комментарий",
+                    placeholder = "Необязательно",
+                    singleLine = false,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                )
+                error?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, color = Danger, fontSize = 13.sp)
                 }
-                OutlinedTextField(name, { name = it }, label = { Text("Название") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(serial, { serial = it }, label = { Text("Серийный номер — необязательно") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                ModalActions(
+                    onCancel = onDismiss,
+                    onConfirm = {
+                        when {
+                            parsed == null -> error = "Введите показание"
+                            parsed < 0 -> error = "Показание не может быть отрицательным"
+                            isLower && !allowLower -> error = "Подтвердите замену счётчика"
+                            else -> onConfirm(parsed, photoUri, note.trim())
+                        }
+                    },
+                    confirmTitle = "Сохранить",
+                    enabled = parsed != null && !recognizing
+                )
             }
-        },
-        confirmButton = { TextButton(onClick = { onConfirm(selected, name.trim(), serial.trim()) }, enabled = name.isNotBlank()) { Text("Добавить") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
+        }
+    }
+}
+
+@Composable
+private fun TextModal(
+    title: String,
+    confirmTitle: String,
+    onDismiss: () -> Unit,
+    content: @Composable (close: () -> Unit, confirm: () -> Unit) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(30.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(22.dp)) {
+                Text(title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(18.dp))
+                content(onDismiss, onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String = "",
+    supporting: String? = null,
+    singleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = if (placeholder.isBlank()) null else ({ Text(placeholder) }),
+        supportingText = supporting?.let { text -> ({ Text(text) }) },
+        singleLine = singleLine,
+        minLines = if (singleLine) 1 else 2,
+        keyboardOptions = keyboardOptions,
+        shape = RoundedCornerShape(18.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Accent,
+            unfocusedBorderColor = Hairline,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White
+        )
     )
 }
 
 @Composable
-private fun OcrTextDialog(title: String, label: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { OutlinedTextField(text, { text = it }, label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
-        confirmButton = { TextButton(onClick = { onConfirm(text.trim()) }, enabled = text.isNotBlank()) { Text("Сохранить") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
-    )
+private fun ModalActions(
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+    confirmTitle: String,
+    enabled: Boolean
+) {
+    Spacer(Modifier.height(18.dp))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier.weight(1f).height(52.dp),
+            shape = RoundedCornerShape(17.dp)
+        ) { Text("Отмена") }
+        Button(
+            onClick = onConfirm,
+            enabled = enabled,
+            modifier = Modifier.weight(1f).height(52.dp),
+            shape = RoundedCornerShape(17.dp)
+        ) { Text(confirmTitle) }
+    }
 }
 
 @Composable
-private fun OcrConfirmDialog(title: String, text: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+private fun PrimaryButton(title: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().height(58.dp),
+        shape = RoundedCornerShape(20.dp)
+    ) { Text(title, fontSize = 17.sp, fontWeight = FontWeight.SemiBold) }
+}
+
+@Composable
+private fun BackLink(title: String, onClick: () -> Unit) {
+    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 6.dp)) {
+        Text("‹  $title", color = Accent, fontSize = 16.sp)
+    }
+}
+
+@Composable
+private fun CircleMark(text: String) {
+    Box(
+        Modifier.size(46.dp).background(Accent.copy(alpha = 0.11f), RoundedCornerShape(23.dp)),
+        contentAlignment = Alignment.Center
+    ) { Text(text, color = Accent, fontSize = 20.sp, fontWeight = FontWeight.Bold) }
+}
+
+@Composable
+private fun MeterBadge(kind: String) {
+    val preset = ocrPresets.firstOrNull { it.kind == kind } ?: ocrPresets.last()
+    Box(
+        Modifier.size(46.dp).background(Accent.copy(alpha = 0.11f), RoundedCornerShape(23.dp)),
+        contentAlignment = Alignment.Center
+    ) { Text(preset.mark, color = Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+}
+
+@Composable
+private fun ConfirmDialog(title: String, text: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(text) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Удалить") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Удалить", color = Danger) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        shape = RoundedCornerShape(28.dp),
+        containerColor = Color.White
     )
 }
 
-private fun ocrIcon(kind: String): String = ocrPresets.firstOrNull { it.kind == kind }?.icon ?: "◉"
+private fun sanitizeNumber(raw: String): String {
+    val normalized = raw.replace('.', ',')
+    val out = StringBuilder()
+    var separatorUsed = false
+    normalized.forEach { ch ->
+        when {
+            ch.isDigit() -> out.append(ch)
+            ch == ',' && !separatorUsed -> {
+                if (out.isEmpty()) out.append('0')
+                out.append(',')
+                separatorUsed = true
+            }
+        }
+    }
+    return out.toString().take(14)
+}
+
+private fun pluralMeter(count: Int): String {
+    val n10 = count % 10
+    val n100 = count % 100
+    return when {
+        n10 == 1 && n100 != 11 -> "счётчик"
+        n10 in 2..4 && n100 !in 12..14 -> "счётчика"
+        else -> "счётчиков"
+    }
+}
+
 private fun ocrFormat(value: Double): String = if (value % 1.0 == 0.0) value.toLong().toString() else String.format(Locale.getDefault(), "%.3f", value).trimEnd('0').trimEnd(',', '.')
 private fun ocrDate(timestamp: Long): String = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(timestamp))
 private fun ocrDateTime(timestamp: Long): String = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(timestamp))
