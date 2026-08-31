@@ -10,6 +10,7 @@ on:
     paths:
       - "manual-tech-trigger.txt"
       - "tech_digest.json"
+      - "tech_digest_parts/**"
       - "generate_digest_epub.py"
 
 permissions:
@@ -47,7 +48,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add latest.epub opds.xml *.epub tech_digest.json generate_digest_epub.py
+          git add latest.epub opds.xml *.epub tech_digest.json tech_digest_parts generate_digest_epub.py
           if git diff --staged --quiet; then
             echo "No changes"
           else
