@@ -6,6 +6,7 @@ import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -69,7 +70,7 @@ class OcrMainActivity : ComponentActivity() {
         val repository = MeterRepository(this)
         setContent {
             MaterialTheme(colorScheme = MeterColors) {
-                OcrMeterApp(repository) { callback -> launchCamera(callback) }
+                MeterApp(repository) { callback -> launchCamera(callback) }
             }
         }
     }
@@ -84,19 +85,19 @@ class OcrMainActivity : ComponentActivity() {
     }
 }
 
-private data class OcrPreset(val title: String, val unit: String, val kind: String, val mark: String)
+private data class MeterPreset(val title: String, val unit: String, val kind: String, val mark: String)
 
-private val ocrPresets = listOf(
-    OcrPreset("Холодная вода", "м³", "cold_water", "ХВ"),
-    OcrPreset("Горячая вода", "м³", "hot_water", "ГВ"),
-    OcrPreset("Электричество", "кВт·ч", "electricity", "ЭЭ"),
-    OcrPreset("Газ", "м³", "gas", "Г"),
-    OcrPreset("Отопление", "Гкал", "heating", "Т"),
-    OcrPreset("Другой", "ед.", "other", "•")
+private val presets = listOf(
+    MeterPreset("Холодная вода", "м³", "cold_water", "ХВ"),
+    MeterPreset("Горячая вода", "м³", "hot_water", "ГВ"),
+    MeterPreset("Электричество", "кВт·ч", "electricity", "ЭЭ"),
+    MeterPreset("Газ", "м³", "gas", "Г"),
+    MeterPreset("Отопление", "Гкал", "heating", "Т"),
+    MeterPreset("Другой", "ед.", "other", "•")
 )
 
 @Composable
-private fun OcrMeterApp(repository: MeterRepository, onTakePhoto: (((String?) -> Unit) -> Unit)) {
+private fun MeterApp(repository: MeterRepository, onTakePhoto: (((String?) -> Unit) -> Unit)) {
     var addresses by remember { mutableStateOf(repository.load()) }
     var addressId by remember { mutableStateOf<String?>(null) }
     var meterId by remember { mutableStateOf<String?>(null) }
@@ -124,7 +125,9 @@ private fun OcrMeterApp(repository: MeterRepository, onTakePhoto: (((String?) ->
                 onOpenMeter = { meterId = it },
                 onAddMeter = { preset, name, serial ->
                     save(addresses.map { a ->
-                        if (a.id == address.id) a.copy(meters = a.meters + Meter(name = name, unit = preset.unit, kind = preset.kind, serial = serial)) else a
+                        if (a.id == address.id) a.copy(
+                            meters = a.meters + Meter(name = name, unit = preset.unit, kind = preset.kind, serial = serial)
+                        ) else a
                     })
                 },
                 onDeleteMeter = { id ->
@@ -141,7 +144,9 @@ private fun OcrMeterApp(repository: MeterRepository, onTakePhoto: (((String?) ->
                 onAddReading = { value, photo, note ->
                     save(addresses.map { a ->
                         if (a.id != address.id) a else a.copy(meters = a.meters.map { m ->
-                            if (m.id == meter.id) m.copy(readings = m.readings + Reading(value = value, photoUri = photo, note = note)) else m
+                            if (m.id == meter.id) m.copy(
+                                readings = m.readings + Reading(value = value, photoUri = photo, note = note)
+                            ) else m
                         })
                     })
                 },
@@ -164,7 +169,7 @@ private fun ScreenFrame(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         content = content
     )
 }
@@ -182,75 +187,92 @@ private fun HomeScreen(
     val readings = addresses.sumOf { a -> a.meters.sumOf { it.readings.size } }
 
     ScreenFrame {
-        Text("Мои счётчики", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
-        Text("Показания без лишних действий", color = Muted, fontSize = 17.sp)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(4.dp))
+        Text("Мои счётчики", fontSize = 30.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold)
+        Text("Все показания в одном месте", color = Muted, fontSize = 15.sp)
+        Spacer(Modifier.height(18.dp))
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SummaryCard(addresses.size.toString(), "Адресов", Modifier.weight(1f))
-            SummaryCard(meters.toString(), "Счётчиков", Modifier.weight(1f))
-            SummaryCard(readings.toString(), "Записей", Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(24.dp))
+        if (addresses.isNotEmpty()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                color = SoftSurface
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CompactStat(addresses.size.toString(), "адресов")
+                    StatDot()
+                    CompactStat(meters.toString(), "счётчиков")
+                    StatDot()
+                    CompactStat(readings.toString(), "записей")
+                }
+            }
+            Spacer(Modifier.height(22.dp))
+            Text("Адреса", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
 
-        Text("Адреса", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
-
-        if (addresses.isEmpty()) {
-            EmptyCard("Добавьте первый адрес", "Квартира, дом, дача или любой другой объект.")
-            Spacer(Modifier.weight(1f))
-        } else {
-            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(addresses, key = { it.id }) { address ->
                     val latest = address.meters.flatMap { it.readings }.maxByOrNull { it.timestamp }
                     Card(
                         onClick = { onOpen(address.id) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(22.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             CircleMark("⌂")
-                            Spacer(Modifier.width(14.dp))
+                            Spacer(Modifier.width(13.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(address.name, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                                Text(
-                                    if (address.meters.isEmpty()) "Счётчиков пока нет" else "${address.meters.size} ${pluralMeter(address.meters.size)}",
-                                    color = Muted,
-                                    fontSize = 14.sp
-                                )
-                                if (latest != null) Text("Обновлено ${ocrDate(latest.timestamp)}", color = Muted, fontSize = 13.sp)
+                                Text(address.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                                val subtitle = if (address.meters.isEmpty()) {
+                                    "Счётчиков пока нет"
+                                } else {
+                                    "${address.meters.size} ${pluralMeter(address.meters.size)}"
+                                }
+                                Text(subtitle, color = Muted, fontSize = 13.sp)
+                                if (latest != null) Text("Обновлено ${formatDate(latest.timestamp)}", color = Muted, fontSize = 12.sp)
                             }
-                            TextButton(onClick = { deleteTarget = address }) { Text("•••", fontSize = 20.sp) }
+                            TextButton(onClick = { deleteTarget = address }) { Text("•••", color = Muted, fontSize = 18.sp) }
                         }
                     }
                 }
             }
+        } else {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 28.dp)) {
+                    Box(
+                        Modifier.size(64.dp).background(Accent.copy(alpha = 0.10f), RoundedCornerShape(32.dp)),
+                        contentAlignment = Alignment.Center
+                    ) { Text("⌂", color = Accent, fontSize = 27.sp, fontWeight = FontWeight.Bold) }
+                    Spacer(Modifier.height(18.dp))
+                    Text("Начните с адреса", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Добавьте квартиру, дом или дачу. Затем подключите счётчики и сохраняйте показания.",
+                        color = Muted,
+                        fontSize = 15.sp,
+                        lineHeight = 21.sp
+                    )
+                }
+            }
         }
 
+        Spacer(Modifier.height(12.dp))
         PrimaryButton("Добавить адрес") { showAdd = true }
     }
 
-    if (showAdd) TextModal(
+    if (showAdd) TextEntryDialog(
         title = "Новый адрес",
+        label = "Название или адрес",
+        placeholder = "Например, Квартира",
         confirmTitle = "Добавить",
-        onDismiss = { showAdd = false }
-    ) { close, confirm ->
-        var text by remember { mutableStateOf("") }
-        AppTextField(
-            value = text,
-            onValueChange = { text = it },
-            label = "Название или адрес",
-            placeholder = "Например, Квартира",
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
-        )
-        ModalActions(
-            onCancel = close,
-            onConfirm = { onAdd(text.trim()); confirm() },
-            confirmTitle = "Добавить",
-            enabled = text.isNotBlank()
-        )
-    }
+        onDismiss = { showAdd = false },
+        onConfirm = { onAdd(it); showAdd = false }
+    )
 
     deleteTarget?.let { target ->
         ConfirmDialog(
@@ -263,24 +285,17 @@ private fun HomeScreen(
 }
 
 @Composable
-private fun SummaryCard(value: String, label: String, modifier: Modifier) {
-    Surface(modifier, shape = RoundedCornerShape(20.dp), color = SoftSurface) {
-        Column(Modifier.padding(14.dp)) {
-            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            Text(label, fontSize = 13.sp, color = Muted)
-        }
+private fun CompactStat(value: String, label: String) {
+    Row(verticalAlignment = Alignment.Baseline) {
+        Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.width(4.dp))
+        Text(label, fontSize = 12.sp, color = Muted)
     }
 }
 
 @Composable
-private fun EmptyCard(title: String, text: String) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = Color.White) {
-        Column(Modifier.padding(20.dp)) {
-            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(4.dp))
-            Text(text, color = Muted, fontSize = 15.sp)
-        }
-    }
+private fun StatDot() {
+    Box(Modifier.size(4.dp).background(Hairline, RoundedCornerShape(2.dp)))
 }
 
 @Composable
@@ -288,7 +303,7 @@ private fun AddressScreen(
     address: Address,
     onBack: () -> Unit,
     onOpenMeter: (String) -> Unit,
-    onAddMeter: (OcrPreset, String, String) -> Unit,
+    onAddMeter: (MeterPreset, String, String) -> Unit,
     onDeleteMeter: (String) -> Unit
 ) {
     var showAdd by remember { mutableStateOf(false) }
@@ -296,16 +311,16 @@ private fun AddressScreen(
 
     ScreenFrame {
         BackLink("Все адреса", onBack)
-        Spacer(Modifier.height(2.dp))
-        Text(address.name, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-        Text("${address.meters.size} ${pluralMeter(address.meters.size)}", color = Muted, fontSize = 16.sp)
-        Spacer(Modifier.height(18.dp))
+        Text(address.name, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+        Text("${address.meters.size} ${pluralMeter(address.meters.size)}", color = Muted, fontSize = 15.sp)
+        Spacer(Modifier.height(16.dp))
 
         if (address.meters.isEmpty()) {
-            EmptyCard("Добавьте счётчик", "Выберите тип, укажите название и при необходимости серийный номер.")
-            Spacer(Modifier.weight(1f))
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                EmptyHint("Добавьте счётчик", "Выберите тип и при необходимости укажите серийный номер.")
+            }
         } else {
-            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(address.meters, key = { it.id }) { meter ->
                     val sorted = meter.readings.sortedByDescending { it.timestamp }
                     val latest = sorted.firstOrNull()
@@ -313,27 +328,31 @@ private fun AddressScreen(
                     Card(
                         onClick = { onOpenMeter(meter.id) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(22.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Column(Modifier.padding(18.dp)) {
+                        Column(Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 MeterBadge(meter.kind)
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(meter.name, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                                    if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 13.sp)
+                                    Text(meter.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                                    if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 12.sp)
                                 }
-                                TextButton(onClick = { deleteTarget = meter }) { Text("•••", fontSize = 20.sp) }
+                                TextButton(onClick = { deleteTarget = meter }) { Text("•••", color = Muted, fontSize = 18.sp) }
                             }
-                            Spacer(Modifier.height(10.dp))
+                            Spacer(Modifier.height(8.dp))
                             if (latest == null) {
-                                Text("Нет показаний", color = Muted)
+                                Text("Нет показаний", color = Muted, fontSize = 14.sp)
                             } else {
-                                Text("${ocrFormat(latest.value)} ${meter.unit}", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                                Text("${formatValue(latest.value)} ${meter.unit}", fontSize = 26.sp, fontWeight = FontWeight.Bold)
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(ocrDate(latest.timestamp), color = Muted, fontSize = 13.sp)
-                                    if (previous != null) Text("Расход ${ocrFormat(latest.value - previous.value)} ${meter.unit}", color = Muted, fontSize = 13.sp)
+                                    Text(formatDate(latest.timestamp), color = Muted, fontSize = 12.sp)
+                                    if (previous != null) Text(
+                                        "Расход ${formatValue(latest.value - previous.value)} ${meter.unit}",
+                                        color = Muted,
+                                        fontSize = 12.sp
+                                    )
                                 }
                             }
                         }
@@ -342,10 +361,11 @@ private fun AddressScreen(
             }
         }
 
+        Spacer(Modifier.height(12.dp))
         PrimaryButton("Добавить счётчик") { showAdd = true }
     }
 
-    if (showAdd) AddMeterModal(
+    if (showAdd) AddMeterDialog(
         onDismiss = { showAdd = false },
         onConfirm = { preset, name, serial -> onAddMeter(preset, name, serial); showAdd = false }
     )
@@ -376,67 +396,66 @@ private fun MeterScreen(
 
     ScreenFrame {
         BackLink("Счётчики", onBack)
-        Spacer(Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             MeterBadge(meter.kind)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(meter.name, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 14.sp)
+                Text(meter.name, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                if (meter.serial.isNotBlank()) Text("№ ${meter.serial}", color = Muted, fontSize = 13.sp)
             }
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(16.dp))
 
-        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = Color.White) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Текущее показание", color = Muted, fontSize = 14.sp)
+        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = Color.White) {
+            Column(Modifier.padding(18.dp)) {
+                Text("Текущее показание", color = Muted, fontSize = 13.sp)
                 if (latest == null) {
-                    Spacer(Modifier.height(8.dp))
-                    Text("—", fontSize = 42.sp, fontWeight = FontWeight.Bold)
-                    Text("Добавьте первое показание", color = Muted)
+                    Text("—", fontSize = 38.sp, fontWeight = FontWeight.Bold)
+                    Text("Добавьте первое показание", color = Muted, fontSize = 14.sp)
                 } else {
-                    Text("${ocrFormat(latest.value)} ${meter.unit}", fontSize = 38.sp, fontWeight = FontWeight.Bold)
-                    Text(ocrDate(latest.timestamp), color = Muted, fontSize = 14.sp)
+                    Text("${formatValue(latest.value)} ${meter.unit}", fontSize = 35.sp, fontWeight = FontWeight.Bold)
+                    Text(formatDate(latest.timestamp), color = Muted, fontSize = 13.sp)
                     if (previous != null) {
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(12.dp))
                         HorizontalDivider(color = Hairline)
-                        Spacer(Modifier.height(14.dp))
-                        Text("Расход с прошлого раза", color = Muted, fontSize = 14.sp)
-                        Text("${ocrFormat(latest.value - previous.value)} ${meter.unit}", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(12.dp))
+                        Text("Расход с прошлого раза", color = Muted, fontSize = 13.sp)
+                        Text("${formatValue(latest.value - previous.value)} ${meter.unit}", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(22.dp))
-        Text("История", fontSize = 21.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(20.dp))
+        Text("История", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(9.dp))
 
         if (sorted.isEmpty()) {
-            Text("Здесь появятся сохранённые показания.", color = Muted)
+            Text("Здесь появятся сохранённые показания.", color = Muted, fontSize = 14.sp)
             Spacer(Modifier.weight(1f))
         } else {
-            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 items(sorted, key = { it.id }) { reading ->
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = Color.White) {
-                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("${ocrFormat(reading.value)} ${meter.unit}", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                                Text(ocrDateTime(reading.timestamp), color = Muted, fontSize = 13.sp)
-                                if (reading.note.isNotBlank()) Text(reading.note, color = Muted, fontSize = 13.sp)
+                                Text("${formatValue(reading.value)} ${meter.unit}", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                                Text(formatDateTime(reading.timestamp), color = Muted, fontSize = 12.sp)
+                                if (reading.note.isNotBlank()) Text(reading.note, color = Muted, fontSize = 12.sp)
                             }
-                            if (reading.photoUri != null) Text("Фото", color = Accent, fontSize = 13.sp)
-                            TextButton(onClick = { deleteTarget = reading }) { Text("•••", fontSize = 20.sp) }
+                            if (reading.photoUri != null) Text("Фото", color = Accent, fontSize = 12.sp)
+                            TextButton(onClick = { deleteTarget = reading }) { Text("•••", color = Muted, fontSize = 18.sp) }
                         }
                     }
                 }
             }
         }
 
+        Spacer(Modifier.height(12.dp))
         PrimaryButton("Новое показание") { showAdd = true }
     }
 
-    if (showAdd) AddReadingModal(
+    if (showAdd) AddReadingDialog(
         meter = meter,
         previousValue = latest?.value,
         onTakePhoto = onTakePhoto,
@@ -447,7 +466,7 @@ private fun MeterScreen(
     deleteTarget?.let { reading ->
         ConfirmDialog(
             title = "Удалить показание?",
-            text = "Запись от ${ocrDate(reading.timestamp)} будет удалена.",
+            text = "Запись от ${formatDate(reading.timestamp)} будет удалена.",
             onDismiss = { deleteTarget = null },
             onConfirm = { onDeleteReading(reading.id); deleteTarget = null }
         )
@@ -455,60 +474,58 @@ private fun MeterScreen(
 }
 
 @Composable
-private fun AddMeterModal(onDismiss: () -> Unit, onConfirm: (OcrPreset, String, String) -> Unit) {
-    var selected by remember { mutableStateOf(ocrPresets.first()) }
+private fun AddMeterDialog(onDismiss: () -> Unit, onConfirm: (MeterPreset, String, String) -> Unit) {
+    var selected by remember { mutableStateOf(presets.first()) }
     var name by remember { mutableStateOf(selected.title) }
     var serial by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth().heightIn(max = 690.dp),
-            shape = RoundedCornerShape(30.dp),
+            shape = RoundedCornerShape(28.dp),
             color = Color.White
         ) {
-            Column(Modifier.padding(22.dp).verticalScroll(rememberScrollState())) {
-                Text("Новый счётчик", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text("Выберите тип", color = Muted, fontSize = 15.sp)
-                Spacer(Modifier.height(16.dp))
+            Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Text("Новый счётчик", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text("Выберите тип", color = Muted, fontSize = 14.sp)
+                Spacer(Modifier.height(15.dp))
 
-                ocrPresets.chunked(2).forEach { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                presets.chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                         row.forEach { preset ->
                             val active = selected.kind == preset.kind
                             Surface(
                                 onClick = { selected = preset; name = preset.title },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(18.dp),
-                                color = if (active) Accent.copy(alpha = 0.13f) else SoftSurface,
-                                border = if (active) androidx.compose.foundation.BorderStroke(1.dp, Accent) else null
+                                shape = RoundedCornerShape(17.dp),
+                                color = if (active) Accent.copy(alpha = 0.12f) else SoftSurface,
+                                border = if (active) BorderStroke(1.dp, Accent) else null
                             ) {
-                                Column(Modifier.padding(14.dp)) {
+                                Column(Modifier.padding(13.dp)) {
                                     Text(preset.mark, color = Accent, fontWeight = FontWeight.Bold)
-                                    Spacer(Modifier.height(6.dp))
-                                    Text(preset.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text(preset.unit, color = Muted, fontSize = 12.sp)
+                                    Spacer(Modifier.height(5.dp))
+                                    Text(preset.title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text(preset.unit, color = Muted, fontSize = 11.sp)
                                 }
                             }
                         }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(9.dp))
                 }
 
-                Spacer(Modifier.height(8.dp))
                 AppTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = "Название",
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next)
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(11.dp))
                 AppTextField(
                     value = serial,
                     onValueChange = { serial = it.take(40) },
                     label = "Серийный номер",
                     placeholder = "Необязательно",
-                    supporting = "Можно вводить цифры, русские и английские буквы",
+                    supporting = "Цифры, русские и английские буквы",
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Characters,
                         keyboardType = KeyboardType.Text,
@@ -516,15 +533,19 @@ private fun AddMeterModal(onDismiss: () -> Unit, onConfirm: (OcrPreset, String, 
                         autoCorrectEnabled = false
                     )
                 )
-                Spacer(Modifier.height(8.dp))
-                ModalActions(onCancel = onDismiss, onConfirm = { onConfirm(selected, name.trim(), serial.trim()) }, confirmTitle = "Добавить", enabled = name.isNotBlank())
+                ModalActions(
+                    onCancel = onDismiss,
+                    onConfirm = { onConfirm(selected, name.trim(), serial.trim()) },
+                    confirmTitle = "Добавить",
+                    enabled = name.isNotBlank()
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AddReadingModal(
+private fun AddReadingDialog(
     meter: Meter,
     previousValue: Double?,
     onTakePhoto: (((String?) -> Unit) -> Unit),
@@ -546,13 +567,13 @@ private fun AddReadingModal(
     Dialog(onDismissRequest = { if (!recognizing) onDismiss() }) {
         Surface(
             modifier = Modifier.fillMaxWidth().heightIn(max = 720.dp),
-            shape = RoundedCornerShape(30.dp),
+            shape = RoundedCornerShape(28.dp),
             color = Color.White
         ) {
-            Column(Modifier.padding(22.dp).verticalScroll(rememberScrollState())) {
-                Text("Новое показание", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text(meter.name, color = Muted, fontSize = 15.sp)
-                Spacer(Modifier.height(18.dp))
+            Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Text("Новое показание", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text(meter.name, color = Muted, fontSize = 14.sp)
+                Spacer(Modifier.height(16.dp))
 
                 Surface(
                     onClick = {
@@ -566,13 +587,13 @@ private fun AddReadingModal(
                                         recognizing = false
                                         result.onSuccess { value ->
                                             if (value != null) {
-                                                valueText = ocrFormat(value)
+                                                valueText = formatValue(value)
                                                 ocrStatus = "Распознано автоматически. Проверьте значение."
                                             } else {
-                                                ocrStatus = "Не удалось уверенно найти показание. Введите его вручную."
+                                                ocrStatus = "Не удалось уверенно найти показание. Введите вручную."
                                             }
                                         }.onFailure {
-                                            ocrStatus = "Не удалось распознать фото. Введите показание вручную."
+                                            ocrStatus = "Не удалось распознать фото. Введите вручную."
                                         }
                                     }
                                 }
@@ -580,58 +601,58 @@ private fun AddReadingModal(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(22.dp),
+                    shape = RoundedCornerShape(20.dp),
                     color = SoftSurface
                 ) {
-                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(if (photoUri == null) "Сделать фото" else "Переснять фото", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-                        Text(if (photoUri == null) "Распознаю показание автоматически" else "Фото добавлено к записи", color = Muted, fontSize = 13.sp)
+                    Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(if (photoUri == null) "Сделать фото" else "Переснять фото", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        Text(if (photoUri == null) "Распознаю показание автоматически" else "Фото добавлено к записи", color = Muted, fontSize = 12.sp)
                     }
                 }
 
                 if (recognizing) {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
                 ocrStatus?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(it, color = Muted, fontSize = 13.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text(it, color = Muted, fontSize = 12.sp)
                 }
 
-                Spacer(Modifier.height(18.dp))
-                Text("Показание", color = Muted, fontSize = 14.sp)
+                Spacer(Modifier.height(16.dp))
+                Text("Показание", color = Muted, fontSize = 13.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = valueText,
                         onValueChange = { raw -> valueText = sanitizeNumber(raw); error = null },
                         modifier = Modifier.weight(1f),
-                        textStyle = LocalTextStyle.current.copy(fontSize = 30.sp, fontWeight = FontWeight.SemiBold),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 28.sp, fontWeight = FontWeight.SemiBold),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
                         singleLine = true,
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(17.dp),
                         placeholder = { Text("0") }
                     )
                     Spacer(Modifier.width(10.dp))
-                    Text(meter.unit, color = Muted, fontSize = 16.sp)
+                    Text(meter.unit, color = Muted, fontSize = 15.sp)
                 }
 
                 if (previousValue != null) {
-                    Spacer(Modifier.height(8.dp))
-                    Text("Предыдущее: ${ocrFormat(previousValue)} ${meter.unit}", color = Muted, fontSize = 13.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text("Предыдущее: ${formatValue(previousValue)} ${meter.unit}", color = Muted, fontSize = 12.sp)
                 }
                 if (parsed != null && previousValue != null && parsed >= previousValue) {
-                    Text("Расход: ${ocrFormat(parsed - previousValue)} ${meter.unit}", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("Расход: ${formatValue(parsed - previousValue)} ${meter.unit}", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
                 if (isLower) {
-                    Spacer(Modifier.height(8.dp))
-                    Text("Значение меньше предыдущего", color = Danger, fontSize = 14.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text("Значение меньше предыдущего", color = Danger, fontSize = 13.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = allowLower, onCheckedChange = { allowLower = it })
-                        Text("Счётчик заменён", fontSize = 14.sp)
+                        Text("Счётчик заменён", fontSize = 13.sp)
                     }
                 }
 
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(12.dp))
                 AppTextField(
                     value = note,
                     onValueChange = { note = it.take(200) },
@@ -641,10 +662,9 @@ private fun AddReadingModal(
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                 )
                 error?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(it, color = Danger, fontSize = 13.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text(it, color = Danger, fontSize = 12.sp)
                 }
-                Spacer(Modifier.height(8.dp))
                 ModalActions(
                     onCancel = onDismiss,
                     onConfirm = {
@@ -664,18 +684,33 @@ private fun AddReadingModal(
 }
 
 @Composable
-private fun TextModal(
+private fun TextEntryDialog(
     title: String,
+    label: String,
+    placeholder: String,
     confirmTitle: String,
     onDismiss: () -> Unit,
-    content: @Composable (close: () -> Unit, confirm: () -> Unit) -> Unit
+    onConfirm: (String) -> Unit
 ) {
+    var text by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(30.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(22.dp)) {
-                Text(title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(18.dp))
-                content(onDismiss, onDismiss)
+        Surface(shape = RoundedCornerShape(28.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp)) {
+                Text(title, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                AppTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = label,
+                    placeholder = placeholder,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
+                )
+                ModalActions(
+                    onCancel = onDismiss,
+                    onConfirm = { onConfirm(text.trim()) },
+                    confirmTitle = confirmTitle,
+                    enabled = text.isNotBlank()
+                )
             }
         }
     }
@@ -701,7 +736,7 @@ private fun AppTextField(
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 2,
         keyboardOptions = keyboardOptions,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(17.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Accent,
             unfocusedBorderColor = Hairline,
@@ -718,18 +753,18 @@ private fun ModalActions(
     confirmTitle: String,
     enabled: Boolean
 ) {
-    Spacer(Modifier.height(18.dp))
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Spacer(Modifier.height(16.dp))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
         OutlinedButton(
             onClick = onCancel,
-            modifier = Modifier.weight(1f).height(52.dp),
-            shape = RoundedCornerShape(17.dp)
+            modifier = Modifier.weight(1f).height(50.dp),
+            shape = RoundedCornerShape(16.dp)
         ) { Text("Отмена") }
         Button(
             onClick = onConfirm,
             enabled = enabled,
-            modifier = Modifier.weight(1f).height(52.dp),
-            shape = RoundedCornerShape(17.dp)
+            modifier = Modifier.weight(1f).height(50.dp),
+            shape = RoundedCornerShape(16.dp)
         ) { Text(confirmTitle) }
     }
 }
@@ -738,33 +773,42 @@ private fun ModalActions(
 private fun PrimaryButton(title: String, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(58.dp),
-        shape = RoundedCornerShape(20.dp)
-    ) { Text(title, fontSize = 17.sp, fontWeight = FontWeight.SemiBold) }
+        modifier = Modifier.fillMaxWidth().height(54.dp),
+        shape = RoundedCornerShape(18.dp)
+    ) { Text(title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
 }
 
 @Composable
 private fun BackLink(title: String, onClick: () -> Unit) {
-    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 6.dp)) {
-        Text("‹  $title", color = Accent, fontSize = 16.sp)
+    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 5.dp)) {
+        Text("‹  $title", color = Accent, fontSize = 15.sp)
+    }
+}
+
+@Composable
+private fun EmptyHint(title: String, text: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 28.dp)) {
+        Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(5.dp))
+        Text(text, color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
     }
 }
 
 @Composable
 private fun CircleMark(text: String) {
     Box(
-        Modifier.size(46.dp).background(Accent.copy(alpha = 0.11f), RoundedCornerShape(23.dp)),
+        Modifier.size(44.dp).background(Accent.copy(alpha = 0.10f), RoundedCornerShape(22.dp)),
         contentAlignment = Alignment.Center
-    ) { Text(text, color = Accent, fontSize = 20.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(text, color = Accent, fontSize = 19.sp, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
 private fun MeterBadge(kind: String) {
-    val preset = ocrPresets.firstOrNull { it.kind == kind } ?: ocrPresets.last()
+    val preset = presets.firstOrNull { it.kind == kind } ?: presets.last()
     Box(
-        Modifier.size(46.dp).background(Accent.copy(alpha = 0.11f), RoundedCornerShape(23.dp)),
+        Modifier.size(44.dp).background(Accent.copy(alpha = 0.10f), RoundedCornerShape(22.dp)),
         contentAlignment = Alignment.Center
-    ) { Text(preset.mark, color = Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+    ) { Text(preset.mark, color = Accent, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
 }
 
 @Composable
@@ -775,7 +819,7 @@ private fun ConfirmDialog(title: String, text: String, onDismiss: () -> Unit, on
         text = { Text(text) },
         confirmButton = { TextButton(onClick = onConfirm) { Text("Удалить", color = Danger) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(26.dp),
         containerColor = Color.White
     )
 }
@@ -807,6 +851,12 @@ private fun pluralMeter(count: Int): String {
     }
 }
 
-private fun ocrFormat(value: Double): String = if (value % 1.0 == 0.0) value.toLong().toString() else String.format(Locale.getDefault(), "%.3f", value).trimEnd('0').trimEnd(',', '.')
-private fun ocrDate(timestamp: Long): String = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(timestamp))
-private fun ocrDateTime(timestamp: Long): String = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(timestamp))
+private fun formatValue(value: Double): String =
+    if (value % 1.0 == 0.0) value.toLong().toString()
+    else String.format(Locale.getDefault(), "%.3f", value).trimEnd('0').trimEnd(',', '.')
+
+private fun formatDate(timestamp: Long): String =
+    SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(timestamp))
+
+private fun formatDateTime(timestamp: Long): String =
+    SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(timestamp))
