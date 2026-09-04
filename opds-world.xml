@@ -2,15 +2,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
 <id>urn:xteink:world</id>
 <title>Зарубежный журнал</title>
-<updated>2026-09-03T03:16:12Z</updated>
+<updated>2026-09-04T03:17:44Z</updated>
 <author><name>ChatGPT</name></author>
 <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-world.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <entry>
 <id>urn:xteink:world:latest</id>
-<title>Зарубежный журнал · 03.09.2026</title>
-<updated>2026-09-03T03:16:12Z</updated>
+<title>Зарубежный журнал · 04.09.2026</title>
+<updated>2026-09-04T03:17:44Z</updated>
 <content type="text">12 материалов: зарубежные статьи в русском журнальном пересказе.</content>
-<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/world-2026-09-03.epub" type="application/epub+zip"/>
+<link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/world-2026-09-04.epub" type="application/epub+zip"/>
 </entry>
 </feed>
