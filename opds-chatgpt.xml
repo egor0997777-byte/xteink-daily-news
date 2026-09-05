@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
-<id>urn:xteink:chatgpt-practice</id><title>ChatGPT на практике</title><updated>2026-09-04T02:22:36Z</updated><author><name>ChatGPT</name></author>
+<id>urn:xteink:chatgpt-practice</id><title>ChatGPT на практике</title><updated>2026-09-05T02:23:13Z</updated><author><name>ChatGPT</name></author>
 <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-chatgpt.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-chatgpt.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-<entry><id>urn:xteink:chatgpt-practice:latest</id><title>ChatGPT на практике · 04.09.2026</title><updated>2026-09-04T02:22:36Z</updated><content type="text">8 практических материалов о работе с ChatGPT.</content><link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/chatgpt-2026-09-04.epub" type="application/epub+zip"/></entry>
+<entry><id>urn:xteink:chatgpt-practice:latest</id><title>ChatGPT на практике · 05.09.2026</title><updated>2026-09-05T02:23:13Z</updated><content type="text">8 практических материалов о работе с ChatGPT.</content><link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/chatgpt-2026-09-05.epub" type="application/epub+zip"/></entry>
 </feed>
