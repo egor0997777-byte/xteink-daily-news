@@ -1,4 +1,4 @@
-name: ChatGPT Practice X3 EPUB
+name: Men's Daily X3 EPUB
 
 on:
   push:
@@ -27,10 +27,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate ChatGPT Practice EPUB and OPDS
+      - name: Generate Men's Daily EPUB and OPDS
         run: python3 generate_chatgpt_epub.py
 
-      - name: Validate EPUB and OPDS
+      - name: Validate EPUB, OPDS and seen registry
         run: |
           python3 - <<'PY'
           import json
@@ -50,9 +50,16 @@ jobs:
               for name in ("META-INF/container.xml", "OEBPS/content.opf", "OEBPS/toc.ncx", "OEBPS/content.xhtml"):
                   assert name in names
                   ET.fromstring(zf.read(name))
-          ET.parse("opds-chatgpt.xml")
+          tree = ET.parse("opds-chatgpt.xml")
+          root = tree.getroot()
+          text = Path("opds-chatgpt.xml").read_text(encoding="utf-8")
+          assert "МУЖСКОЙ" in text
+          assert f"chatgpt-{issue_date}.epub" in text
           latest = Path("chatgpt-latest.epub")
           assert latest.exists() and latest.read_bytes() == epub.read_bytes()
+          seen = json.loads(Path("chatgpt/seen.json").read_text(encoding="utf-8"))
+          urls = {row["url"] for row in seen if row.get("date") == issue_date}
+          assert len(urls) == len(data["articles"]), "seen registry does not contain the full current issue"
           print(f"Validated {epub} ({epub.stat().st_size} bytes)")
           PY
 
@@ -60,11 +67,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add chatgpt-*.epub opds-chatgpt.xml
+          git add chatgpt-*.epub opds-chatgpt.xml chatgpt/seen.json
           if git diff --staged --quiet; then
             echo "No generated changes"
           else
-            git commit -m "Update ChatGPT Practice X3 issue $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "Update Men's Daily X3 issue $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git pull --rebase origin main
             git push
           fi
