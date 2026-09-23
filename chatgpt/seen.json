@@ -1,27 +1,261 @@
 [
-  {"date":"2026-09-20","category":"ЗДОРОВЬЕ","source":"Men's Health US","title":"Почему идеальная дисциплина не гарантирует идеального здоровья","url":"https://www.menshealth.com/health/a73585122/guys-who-optimize-their-lives-keep-missing-this-one-crucial-thing/"},
-  {"date":"2026-09-20","category":"ЗДОРОВЬЕ","source":"Men's Health US","title":"GLP-1 и сердце: почему препараты для снижения веса не становятся «новыми статинами»","url":"https://www.menshealth.com/health/a73741888/are-glp-1s-the-new-statins-heart-health/"},
-  {"date":"2026-09-20","category":"ЗДОРОВЬЕ","source":"GQ","title":"Самый скучный совет о сне оказался одним из самых важных: ложиться примерно в одно время","url":"https://www.gq.com/story/the-most-crucial-step-to-better-sleep-is-also-the-most-straightforward"},
-  {"date":"2026-09-20","category":"ТЕЛО","source":"GQ","title":"Тяжёлые веса или много повторений: для роста мышц важнее не культ диапазона, а качество подхода","url":"https://www.gq.com/story/heavy-weights-vs-high-reps"},
-  {"date":"2026-09-20","category":"ТЕЛО","source":"GQ","title":"Почему «сжечь жир именно на животе» нельзя, а уменьшить висцеральный жир всё же можно","url":"https://www.gq.com/story/how-to-actually-burn-off-belly-fat-and-why-it-matters"},
-  {"date":"2026-09-20","category":"ТЕХНОЛОГИИ","source":"WIRED","title":"Трекеры сна становятся умнее, но главный вопрос — помогают ли данные менять поведение","url":"https://www.wired.com/story/best-sleep-trackers/"},
-  {"date":"2026-09-20","category":"ТЕХНОЛОГИИ","source":"Men's Health US","title":"Что редакция Men's Health реально тестирует этой осенью: от часов и кроссовок до рюкзака","url":"https://www.menshealth.com/technology-gear/a73582061/mh-gear-report-september-2026/"},
-  {"date":"2026-09-20","category":"ТЕХНОЛОГИИ","source":"The Verge","title":"Лучшие странности IFA 2026: экран без рамок, робот-пылесос с помощником и ноутбук, который растёт в ширину","url":"https://www.theverge.com/tech/986867/ifa-2026-smart-home-lights-laptop-robot-vacuum-ai-headphones"},
-  {"date":"2026-09-20","category":"НАУКА","source":"Popular Mechanics","title":"Органы могут стареть не плавно: исследование увидело два периода ускоренных изменений","url":"https://www.popularmechanics.com/science/health/a73727468/human-aging-two-phases/"},
-  {"date":"2026-09-20","category":"НАУКА","source":"Ars Technica","title":"Семь научных историй, которые легко пропустить: «звезда с чёрной дырой», микродроны на звуке и охлаждение от отходящего тепла","url":"https://arstechnica.com/science/2026/09/august-research-roundup-7-cool-science-stories-we-almost-missed/"},
-  {"date":"2026-09-20","category":"МОТОР","source":"Car and Driver","title":"Четыре больших седана против кроссоверной эпохи: Audi A6, BMW 540i, Genesis G80 и Mercedes E450","url":"https://www.caranddriver.com/reviews/comparison-test/a73569758/2026-audi-bmw-genesis-mercedes-benz-luxury-sedan-comparison-test/"},
-  {"date":"2026-09-20","category":"СТИЛЬ И ДОМ","source":"GQ","title":"Осенний гардероб без модной истерики: вещи, которые работают несколько сезонов","url":"https://www.gq.com/story/ultimate-wardrobe-fall-winter-2026-edition"},
-  {"date":"2026-09-20","category":"СТИЛЬ И ДОМ","source":"New York Magazine / The Strategist","title":"Увлажнитель воздуха: важнее не «умность», а то, насколько легко его мыть","url":"https://nymag.com/strategist/article/best-humidifiers.html"},
-  {"date":"2026-09-20","category":"ПРИКЛЮЧЕНИЯ","source":"Outside","title":"Начать ездить на мотоцикле в 50: почему новое увлечение оказалось не кризисом среднего возраста, а способом снова учиться","url":"https://www.outsideonline.com/adventure-travel/national-parks/south-dakota-motorcycle-trip-guide"},
-  {"date":"2026-09-22","category":"ЗДОРОВЬЕ","source":"Men's Health US","title":"Хьюберман против культа оптимизации: протоколы должны освобождать жизнь, а не захватывать её","url":"https://www.menshealth.com/health/a73773211/andrew-huberman-protocols-interview"},
-  {"date":"2026-09-22","category":"ТЕЛО","source":"Men's Health US","title":"Можно ли одновременно терять жир и набирать мышцы: рекомпозиция без фитнес-магии","url":"https://www.menshealth.com/fitness/a73762080/body-recomposition-ultimate-guide"},
-  {"date":"2026-09-22","category":"ПИТАНИЕ","source":"Men's Health US","title":"Креатин для мозга: где заканчиваются реальные данные и начинается реклама ноотропа","url":"https://www.menshealth.com/nutrition/a73670812/creatine-cognitive-benefits"},
-  {"date":"2026-09-22","category":"ЗДОРОВЬЕ","source":"Outside","title":"Час тренировки против целого дня в кресле: может ли спорт отменить сидячую работу","url":"https://www.outsideonline.com/health/wellness/exercise-health-risks-sitting-all-day"},
-  {"date":"2026-09-22","category":"ТЕЛО","source":"Outside","title":"Утяжелённый жилет: полезный апгрейд обычной ходьбы, но не замена силовой тренировке","url":"https://www.outsideonline.com/health/training-performance/weighted-vest-benefits-rucking-science"},
-  {"date":"2026-09-22","category":"ТЕХНОЛОГИИ","source":"Outside","title":"iPhone 18 Pro вернул настоящую диафрагму: зачем телефону механика из большой камеры","url":"https://www.outsideonline.com/outdoor-gear/tools/iphone-18-pro-camera-review"},
-  {"date":"2026-09-22","category":"МОТОР","source":"Outside","title":"Rivian R2: семейный электрокроссовер, который на грунте превращается в 656-сильную игрушку","url":"https://www.outsideonline.com/outdoor-gear/cars-trucks/rivian-r2-ev-review-off-road"},
-  {"date":"2026-09-22","category":"НАУКА","source":"Popular Mechanics","title":"Печенье из бутылки: как микробы превращают пластиковые отходы в еду для космоса","url":"https://www.popularmechanics.com/science/a73769187/cookies-made-from-plastic"},
-  {"date":"2026-09-22","category":"НАУКА","source":"Popular Mechanics","title":"Алмаз оказался пьезоэлектриком — если сделать его достаточно тонким","url":"https://www.popularmechanics.com/science/a73586328/diamonds-piezoelectric"},
-  {"date":"2026-09-22","category":"НАУКА","source":"Ars Technica","title":"Телескоп Roman получил запас топлива на 22 года благодаря почти идеальному запуску","url":"https://arstechnica.com/space/2026/09/the-roman-telescope-has-enough-gas-for-22-years-double-nasas-expectations"},
-  {"date":"2026-09-22","category":"ДОМ","source":"Popular Mechanics","title":"Осушитель без маркетинга: важнее дренаж, гигростат и обслуживание, чем Wi‑Fi","url":"https://www.popularmechanics.com/home/a35419771/best-dehumidifiers"}
+  {
+    "date": "2026-09-20",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Men's Health US",
+    "title": "Почему идеальная дисциплина не гарантирует идеального здоровья",
+    "url": "https://www.menshealth.com/health/a73585122/guys-who-optimize-their-lives-keep-missing-this-one-crucial-thing/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Men's Health US",
+    "title": "GLP-1 и сердце: почему препараты для снижения веса не становятся «новыми статинами»",
+    "url": "https://www.menshealth.com/health/a73741888/are-glp-1s-the-new-statins-heart-health/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ЗДОРОВЬЕ",
+    "source": "GQ",
+    "title": "Самый скучный совет о сне оказался одним из самых важных: ложиться примерно в одно время",
+    "url": "https://www.gq.com/story/the-most-crucial-step-to-better-sleep-is-also-the-most-straightforward"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ТЕЛО",
+    "source": "GQ",
+    "title": "Тяжёлые веса или много повторений: для роста мышц важнее не культ диапазона, а качество подхода",
+    "url": "https://www.gq.com/story/heavy-weights-vs-high-reps"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ТЕЛО",
+    "source": "GQ",
+    "title": "Почему «сжечь жир именно на животе» нельзя, а уменьшить висцеральный жир всё же можно",
+    "url": "https://www.gq.com/story/how-to-actually-burn-off-belly-fat-and-why-it-matters"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "WIRED",
+    "title": "Трекеры сна становятся умнее, но главный вопрос — помогают ли данные менять поведение",
+    "url": "https://www.wired.com/story/best-sleep-trackers/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Men's Health US",
+    "title": "Что редакция Men's Health реально тестирует этой осенью: от часов и кроссовок до рюкзака",
+    "url": "https://www.menshealth.com/technology-gear/a73582061/mh-gear-report-september-2026/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "The Verge",
+    "title": "Лучшие странности IFA 2026: экран без рамок, робот-пылесос с помощником и ноутбук, который растёт в ширину",
+    "url": "https://www.theverge.com/tech/986867/ifa-2026-smart-home-lights-laptop-robot-vacuum-ai-headphones"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "НАУКА",
+    "source": "Popular Mechanics",
+    "title": "Органы могут стареть не плавно: исследование увидело два периода ускоренных изменений",
+    "url": "https://www.popularmechanics.com/science/health/a73727468/human-aging-two-phases/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "НАУКА",
+    "source": "Ars Technica",
+    "title": "Семь научных историй, которые легко пропустить: «звезда с чёрной дырой», микродроны на звуке и охлаждение от отходящего тепла",
+    "url": "https://arstechnica.com/science/2026/09/august-research-roundup-7-cool-science-stories-we-almost-missed/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "МОТОР",
+    "source": "Car and Driver",
+    "title": "Четыре больших седана против кроссоверной эпохи: Audi A6, BMW 540i, Genesis G80 и Mercedes E450",
+    "url": "https://www.caranddriver.com/reviews/comparison-test/a73569758/2026-audi-bmw-genesis-mercedes-benz-luxury-sedan-comparison-test/"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "СТИЛЬ И ДОМ",
+    "source": "GQ",
+    "title": "Осенний гардероб без модной истерики: вещи, которые работают несколько сезонов",
+    "url": "https://www.gq.com/story/ultimate-wardrobe-fall-winter-2026-edition"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "СТИЛЬ И ДОМ",
+    "source": "New York Magazine / The Strategist",
+    "title": "Увлажнитель воздуха: важнее не «умность», а то, насколько легко его мыть",
+    "url": "https://nymag.com/strategist/article/best-humidifiers.html"
+  },
+  {
+    "date": "2026-09-20",
+    "category": "ПРИКЛЮЧЕНИЯ",
+    "source": "Outside",
+    "title": "Начать ездить на мотоцикле в 50: почему новое увлечение оказалось не кризисом среднего возраста, а способом снова учиться",
+    "url": "https://www.outsideonline.com/adventure-travel/national-parks/south-dakota-motorcycle-trip-guide"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Men's Health US",
+    "title": "Хьюберман против культа оптимизации: протоколы должны освобождать жизнь, а не захватывать её",
+    "url": "https://www.menshealth.com/health/a73773211/andrew-huberman-protocols-interview"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ТЕЛО",
+    "source": "Men's Health US",
+    "title": "Можно ли одновременно терять жир и набирать мышцы: рекомпозиция без фитнес-магии",
+    "url": "https://www.menshealth.com/fitness/a73762080/body-recomposition-ultimate-guide"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ПИТАНИЕ",
+    "source": "Men's Health US",
+    "title": "Креатин для мозга: где заканчиваются реальные данные и начинается реклама ноотропа",
+    "url": "https://www.menshealth.com/nutrition/a73670812/creatine-cognitive-benefits"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Outside",
+    "title": "Час тренировки против целого дня в кресле: может ли спорт отменить сидячую работу",
+    "url": "https://www.outsideonline.com/health/wellness/exercise-health-risks-sitting-all-day"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ТЕЛО",
+    "source": "Outside",
+    "title": "Утяжелённый жилет: полезный апгрейд обычной ходьбы, но не замена силовой тренировке",
+    "url": "https://www.outsideonline.com/health/training-performance/weighted-vest-benefits-rucking-science"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Outside",
+    "title": "iPhone 18 Pro вернул настоящую диафрагму: зачем телефону механика из большой камеры",
+    "url": "https://www.outsideonline.com/outdoor-gear/tools/iphone-18-pro-camera-review"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "МОТОР",
+    "source": "Outside",
+    "title": "Rivian R2: семейный электрокроссовер, который на грунте превращается в 656-сильную игрушку",
+    "url": "https://www.outsideonline.com/outdoor-gear/cars-trucks/rivian-r2-ev-review-off-road"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "НАУКА",
+    "source": "Popular Mechanics",
+    "title": "Печенье из бутылки: как микробы превращают пластиковые отходы в еду для космоса",
+    "url": "https://www.popularmechanics.com/science/a73769187/cookies-made-from-plastic"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "НАУКА",
+    "source": "Popular Mechanics",
+    "title": "Алмаз оказался пьезоэлектриком — если сделать его достаточно тонким",
+    "url": "https://www.popularmechanics.com/science/a73586328/diamonds-piezoelectric"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "НАУКА",
+    "source": "Ars Technica",
+    "title": "Телескоп Roman получил запас топлива на 22 года благодаря почти идеальному запуску",
+    "url": "https://arstechnica.com/space/2026/09/the-roman-telescope-has-enough-gas-for-22-years-double-nasas-expectations"
+  },
+  {
+    "date": "2026-09-22",
+    "category": "ДОМ",
+    "source": "Popular Mechanics",
+    "title": "Осушитель без маркетинга: важнее дренаж, гигростат и обслуживание, чем Wi‑Fi",
+    "url": "https://www.popularmechanics.com/home/a35419771/best-dehumidifiers"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Outside",
+    "title": "Apple Watch Ultra 4: восстановление стало понятнее, батарея — длиннее",
+    "url": "https://www.outsideonline.com/outdoor-gear/tools/the-apple-watch-ultra-4-ups-its-game-on-heart-rate-and-battery-life"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ТЕЛО",
+    "source": "Outside",
+    "title": "Одежда тоже хочет стать суперкроссовками: может ли экипировка реально экономить силы",
+    "url": "https://www.outsideonline.com/outdoor-gear/clothing-apparel/high-tech-running-clothes"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ПСИХОЛОГИЯ",
+    "source": "Outside",
+    "title": "Боулдеринг как терапия: десять недель лазания снизили симптомы депрессии и тревоги",
+    "url": "https://www.outsideonline.com/health/training-performance/recent-research-says-that-climbing-can-reduce-depression-and-anxiety"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Outside",
+    "title": "Почему фитнес-часы иногда ошибаются на тёмной коже — и насколько велика погрешность",
+    "url": "https://www.outsideonline.com/health/training-performance/dark-skin-tone-wearable-accuracy-bias"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Popular Mechanics",
+    "title": "Новые способы вернуть волосы: учёные пытаются разбудить спящие фолликулы",
+    "url": "https://www.popularmechanics.com/science/health/a71573803/hair-loss-treatments-regrowth"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "НАУКА",
+    "source": "Popular Mechanics",
+    "title": "Жаба, чернила и научный скандал длиной в сто лет",
+    "url": "https://www.popularmechanics.com/science/a73819831/paul-kammerer-toad"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "НАУКА",
+    "source": "Popular Mechanics",
+    "title": "Плотины Гувера и Глен-Каньон упираются не в турбины, а в уровень воды",
+    "url": "https://www.popularmechanics.com/science/energy/a73357713/hoover-dam-power-crisis"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Ars Technica",
+    "title": "Нормальный Premiere наконец пришёл на Android — и базовый монтаж бесплатный",
+    "url": "https://arstechnica.com/gadgets/2026/09/adobe-premiere-finally-brings-powerful-video-editing-to-android-and-its-free"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Ars Technica",
+    "title": "Toyota хочет 400 тысяч заводских роботов — и учить их будут сами рабочие",
+    "url": "https://arstechnica.com/ai/2026/09/toyota-claims-plan-for-400000-factory-robots-wont-replace-human-workers"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "МОТОР",
+    "source": "Ars Technica",
+    "title": "Почему немецкий автопром внезапно заговорил о закрытии заводов",
+    "url": "https://arstechnica.com/cars/2026/09/protests-for-germanys-car-industry-as-job-losses-loom"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "СТИЛЬ",
+    "source": "Outside",
+    "title": "Gorpcore закончился не потому, что исчез, а потому что стал обычной одеждой",
+    "url": "https://www.outsideonline.com/outdoor-gear/clothing-apparel/gorpcore-is-dead-outdoor-style"
+  },
+  {
+    "date": "2026-09-23",
+    "category": "ПРИКЛЮЧЕНИЯ",
+    "source": "Outside",
+    "title": "Два фута снега без ночного снаряжения: трагедия, которая объясняет смысл аварийного набора",
+    "url": "https://www.outsideonline.com/outdoor-adventure/exploration-survival/washington-enchantments-hiker-death"
+  }
 ]
