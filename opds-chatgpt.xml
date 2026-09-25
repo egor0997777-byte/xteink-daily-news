@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
-<id>urn:xteink:chatgpt-practice</id><title>МУЖСКОЙ</title><updated>2026-09-24T02:54:33Z</updated><author><name>ChatGPT</name></author>
+<id>urn:xteink:chatgpt-practice</id><title>МУЖСКОЙ</title><updated>2026-09-25T03:19:20Z</updated><author><name>ChatGPT</name></author>
 <link rel="self" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-chatgpt.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
 <link rel="start" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/opds-chatgpt.xml" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-<entry><id>urn:xteink:chatgpt-practice:latest</id><title>МУЖСКОЙ · 24.09.2026</title><updated>2026-09-24T02:54:33Z</updated><content type="text">11 материалов о здоровье, форме, технологиях, стиле и жизни.</content><link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/chatgpt-2026-09-24.epub" type="application/epub+zip"/></entry>
+<entry><id>urn:xteink:chatgpt-practice:latest</id><title>МУЖСКОЙ · 25.09.2026</title><updated>2026-09-25T03:19:20Z</updated><content type="text">11 материалов о здоровье, форме, технологиях, стиле и жизни.</content><link rel="http://opds-spec.org/acquisition" href="https://raw.githubusercontent.com/egor0997777-byte/xteink-daily-news/main/chatgpt-2026-09-25.epub" type="application/epub+zip"/></entry>
 </feed>
