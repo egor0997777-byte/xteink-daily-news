@@ -61,8 +61,8 @@ def load_input() -> dict:
     articles = data.get("articles")
     if not isinstance(articles, list) or not articles:
         raise ValueError("articles must be a non-empty list")
-    if not 10 <= len(articles) <= 15:
-        raise ValueError("articles must contain 10 to 15 items")
+    if not 10 <= len(articles) <= 35:
+        raise ValueError("articles must contain 10 to 35 items")
 
     required = ("category", "source", "title", "url", "summary")
     urls = set()
