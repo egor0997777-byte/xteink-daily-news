@@ -26,8 +26,8 @@ for raw in parts:
         raise ValueError(f"part must contain a list: {raw}")
     articles.extend(rows)
 
-if not 10 <= len(articles) <= 35:
-    raise ValueError(f"merged issue has {len(articles)} articles; expected 10..35")
+if not 10 <= len(articles) <= 60:
+    raise ValueError(f"merged issue has {len(articles)} articles; expected 10..60")
 
 out = {"date": date, "title": title, "articles": articles}
 OUTPUT.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

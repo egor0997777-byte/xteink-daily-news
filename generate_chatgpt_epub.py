@@ -61,8 +61,8 @@ def load_input() -> dict:
     articles = data.get("articles")
     if not isinstance(articles, list) or not articles:
         raise ValueError("articles must be a non-empty list")
-    if not 10 <= len(articles) <= 35:
-        raise ValueError("articles must contain 10 to 35 items")
+    if not 10 <= len(articles) <= 60:
+        raise ValueError("articles must contain 10 to 60 items")
 
     required = ("category", "source", "title", "url", "summary")
     urls = set()
@@ -114,10 +114,7 @@ def make_epub(data: dict, path: Path) -> None:
     nav = []
     previous_category = None
     for idx, article in enumerate(articles, 1):
-        category = str(article["category"]).strip()
-        if category != previous_category:
-            body.append(f'<h2 class="section">{esc(category)}</h2>')
-            previous_category = category
+        # Категории в тексте книги не показываем: заголовок раздела отрывался от статьи на границе страницы.
         anchor = f"a{idx}"
         body.append(f'<article id="{anchor}"><h3>{idx}. {esc(article["title"])}</h3>')
         published = str(article.get("published") or "").strip()
@@ -127,9 +124,9 @@ def make_epub(data: dict, path: Path) -> None:
         body.append(f'<p class="source"><strong>{source_line}</strong></p>')
         for p in paragraphs(article["summary"]):
             body.append(f'<p>{esc(p)}</p>')
-        body.append(f'<p class="source"><a href="{esc(article["url"])}">Оригинал статьи</a></p></article><hr/>')
+        body.append('</article><hr/>')
         nav.append(
-            f'<navPoint id="np{idx}" playOrder="{idx}"><navLabel><text>{esc(category)} · {esc(article["title"][:78])}</text></navLabel><content src="content.xhtml#{anchor}"/></navPoint>'
+            f'<navPoint id="np{idx}" playOrder="{idx}"><navLabel><text>{idx}. {esc(article["title"][:78])}</text></navLabel><content src="content.xhtml#{anchor}"/></navPoint>'
         )
 
     xhtml = f'''<?xml version="1.0" encoding="UTF-8"?>
@@ -140,7 +137,8 @@ def make_epub(data: dict, path: Path) -> None:
 body {{ font-family: serif; font-size: 1em; line-height: 1.5; margin: .75em; }}
 h1 {{ font-size: 1.55em; margin: 1em 0 .5em; letter-spacing: .04em; }}
 h2.section {{ font-size: 1.22em; margin: 1.35em 0 .55em; border-bottom: 1px solid #777; padding-bottom: .2em; }}
-h3 {{ font-size: 1.12em; margin: 1.05em 0 .42em; }}
+h3 {{ font-size: 1.12em; margin: 1.05em 0 .42em; page-break-after: avoid; break-after: avoid; }}
+article {{ orphans: 3; widows: 3; }}
 p {{ margin: .65em 0; }}
 #cover {{ text-align: center; margin-top: 2em; }}
 .date {{ font-size: 1.15em; font-weight: bold; }}
