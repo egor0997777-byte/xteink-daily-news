@@ -663,5 +663,89 @@
     "source": "Condé Nast Traveler",
     "title": "Хорошая сумка на выходные умеет становиться меньше, когда вещей мало",
     "url": "https://www.cntraveler.com/story/this-pillowy-soft-duffel-is-the-ultimate-road-trip-bag"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Popular Mechanics",
+    "title": "Шифр Наполеона, который не могли прочесть 217 лет, ИИ разобрал за шесть часов",
+    "url": "https://www.popularmechanics.com/science/archaeology/a74160283/ai-breaks-napoleon-code/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "Popular Mechanics",
+    "title": "Кто-то включил разморозку в сотнях французских супермаркетов. Как холодильники превращают в батареи для сети",
+    "url": "https://www.popularmechanics.com/science/energy/a74164466/french-supermarket-refrigerator-hack/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ТЕХНОЛОГИИ",
+    "source": "MIT Technology Review",
+    "title": "«Мы смотрели на это неправильно»: заявление, взорвавшее мир ИИ",
+    "url": "https://www.technologyreview.com/2026/10/19/1147149/we-were-looking-at-it-wrong-the-explosive-claim-thats-upended-the-ai-world/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ИСТОРИЯ",
+    "source": "Popular Science",
+    "title": "Танцевальная чума 1518 года: почему люди плясали до смерти",
+    "url": "https://www.popsci.com/science/dancing-plague-medieval-strasbourg/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "МОТОР",
+    "source": "Road & Track",
+    "title": "Avis выставил счёт за 18 тысяч миль за неделю: нужно ехать 107 миль в час без остановок",
+    "url": "https://www.roadandtrack.com/news/a74194262/avis-billed-a-man-more-than-4000-claiming-he-drove-18000-miles-in-7-days/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "МОТОР",
+    "source": "Ars Technica",
+    "title": "Электропикап за $25 000: первый салон Slate и главный вопрос о качестве сборки",
+    "url": "https://arstechnica.com/cars/2026/10/visiting-slates-first-showroom-as-its-25000-electric-truck-nears-production/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ПРИКЛЮЧЕНИЯ",
+    "source": "Outside",
+    "title": "Gambler 500: четыре тысячи «развалюх» едут убирать мусор в пустыне Орегона",
+    "url": "https://www.outsideonline.com/adventure-travel/destinations/north-america/gambler-500-oregon-public-lands-cleanup/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ЗДОРОВЬЕ",
+    "source": "Men's Health",
+    "title": "Можно ли на статинах есть бургеры? Кардиологи: статин — это ремень безопасности, а не пропуск",
+    "url": "https://www.menshealth.com/health/a74163062/diet-while-taking-statin-ldl-cholesterol/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "СОН",
+    "source": "Men's Health",
+    "title": "«Когнитивная перетасовка»: вирусный трюк, чтобы быстрее заснуть снова",
+    "url": "https://www.menshealth.com/health/a74092682/what-is-cognitive-reshuffling-sleep/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ТЕЛО",
+    "source": "Runner's World",
+    "title": "Зона 2 для бегуна: как понять, что вы бежите достаточно легко, и сколько так бегать",
+    "url": "https://www.runnersworld.com/training/a74192542/zone-2-running-training/"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ЛЮДИ",
+    "source": "GQ",
+    "title": "Принц Гарри о горе: «Это можно пережить, только научившись жить с ним»",
+    "url": "https://www.gq.com/story/prince-harry-one-more-question"
+  },
+  {
+    "date": "2026-10-20",
+    "category": "ИНТЕРНЕТ",
+    "source": "WIRED",
+    "title": "ИИ-агент вступил в рассылку исследователей интернета, и они вышли из себя",
+    "url": "https://www.wired.com/story/an-ai-agent-joined-a-listserv-of-top-internet-researchers-the-reply-all-chaos-is-still-unfolding/"
   }
 ]
