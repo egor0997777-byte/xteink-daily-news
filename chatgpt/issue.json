@@ -1,9 +1,7 @@
 {
-  "date": "2026-09-28",
-  "title": "МУЖСКОЙ · 28.09.2026",
+  "date": "2026-10-20",
+  "title": "МУЖСКОЙ · 20.10.2026",
   "parts": [
-    "chatgpt/parts/2026-09-28-01.json",
-    "chatgpt/parts/2026-09-28-02.json",
-    "chatgpt/parts/2026-09-28-03.json"
+    "chatgpt/parts/2026-10-20-01.json"
   ]
 }
